@@ -74,8 +74,7 @@ class SimplifyJobs(RepoChangesParser):
             since_as_filter=last_date,
             filepath=".github/scripts/listings.json",
             only_in_branch="dev",
-            order="reverse",
-            num_workers=2)
+            order="reverse")
             .traverse_commits()]
 
     def check(self) -> list[JobInformation] | None:
