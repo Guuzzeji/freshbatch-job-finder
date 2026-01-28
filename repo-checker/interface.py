@@ -101,5 +101,5 @@ class RepoChangesParser:
         except Exception as e:
             print(f"failed: {str(e)}")
 
-    def check(self) -> JobInformation | None:
+    def check(self) -> None:
         return None
