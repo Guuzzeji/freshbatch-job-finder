@@ -1,9 +1,9 @@
-from pydriller import Repository, Commit
-from datetime import datetime
 import json
+import asyncio
+from datetime import datetime, timedelta
+from pydriller import Repository, Commit
 
 from interface import RepoChangesParser, JobInformation, ALL_REPO_SAVE_PATH
-
 
 class SimplifyJobs(RepoChangesParser):
     __repo_name = "SimplifyJobs-New-Grad-Positions"
@@ -68,32 +68,33 @@ class SimplifyJobs(RepoChangesParser):
 
         return jobs
 
-    def get_latest_commits(self, last_date: datetime = datetime.now()) -> list[Commit] | None:
+    def get_latest_commits(self, last_date: datetime = datetime.now()) -> list[Commit]:
         return [commit for commit in Repository(
             self.__repo_path,
-            since_as_filter=last_date,
+            since=last_date,
             filepath=".github/scripts/listings.json",
             only_in_branch="dev",
             order="reverse")
             .traverse_commits()]
 
-    def check(self) -> list[JobInformation] | None:
+    def check(self) -> None:
         self.pull(self.__repo_url, self.__repo_name)
-        commits = self.get_latest_commits()
+        last_date = super().get_last_commit_date(self.__repo_name)
+        commits = self.get_latest_commits(last_date)
 
-        if commits is None:
+        if len(commits) == 0:
             return None
-
+        
+        super().save_commit_date(commits[0].author_date + timedelta(seconds=5), self.__repo_name)
         jobs: list[JobInformation] = []
         for commit in commits:
             for file in commit.modified_files:
                 jobs.extend(self.parse_job_data(file.diff_parsed))
 
-        for job in jobs:
-            print(job)
+        print(f"found {len(jobs)} jobs")
 
-        return jobs
-
+        if len(jobs) > 0:
+            asyncio.run(super().add_jobs_batch(jobs))
 
 if __name__ == "__main__":
     SimplifyJobs().check()

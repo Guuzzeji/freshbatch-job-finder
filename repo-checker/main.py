@@ -4,7 +4,6 @@ import time
 
 from SimplifyJobs import SimplifyJobs
 
-
 REPOS = [
     SimplifyJobs()
 ]

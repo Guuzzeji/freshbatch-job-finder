@@ -1,5 +1,11 @@
 import os
+import uuid
+import json
+import redis
+from bullmq import Queue
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class JobInformation:
@@ -40,6 +46,9 @@ class JobInformation:
     
     def __str__(self) -> str:
         return str(self.to_json())
+    
+    def dump(self) -> str:
+        return json.dumps(self.to_json())
 
 
 ALL_REPO_SAVE_PATH = os.getcwd() + "/repos/"
@@ -47,11 +56,33 @@ ALL_REPO_SAVE_PATH = os.getcwd() + "/repos/"
 
 class RepoChangesParser:
 
+    def __open_connection(self) -> redis.Redis:
+        return redis.Redis(host=os.getenv('REDIS_HOST') or 'localhost', port=int(os.getenv('REDIS_PORT') or 6379), db=0, decode_responses=True)
+
     def get_last_commit_date(self, repo_name: str) -> datetime:
+        redis_conn = self.__open_connection()
+        redis_date = redis_conn.get(repo_name + ":last_commit_date")
+        redis_conn.close()
+
+        if redis_date is not None:
+            return datetime.fromisoformat(str(redis_date))
+        
         return datetime.now()
 
     def save_commit_date(self, date: datetime, repo_name: str) -> None:
-        pass
+        redis_conn = self.__open_connection()
+        redis_conn.set(repo_name + ":last_commit_date", date.isoformat())
+        redis_conn.close()
+
+    async def add_jobs_batch(self, jobs: list[JobInformation]) -> None:
+        redis_url = "redis://" + (os.getenv('REDIS_HOST') or 'localhost') + ":" + (os.getenv('REDIS_PORT') or '6379')
+        webhook_worker_queue = Queue('webhook', opts={'connection': redis_url})
+
+        try:
+            for job in jobs:
+                await webhook_worker_queue.add(str(uuid.uuid4()), job.dump())
+        finally:
+            await webhook_worker_queue.close()
 
     def __create_repo_folder(self) -> None:
         if not os.path.exists(ALL_REPO_SAVE_PATH):
