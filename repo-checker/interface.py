@@ -5,7 +5,10 @@ import redis
 from bullmq import Queue
 from datetime import datetime
 from dotenv import load_dotenv
+import logging
+
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class JobInformation:
@@ -99,7 +102,7 @@ class RepoChangesParser:
             os.chdir(ALL_REPO_SAVE_PATH + repo_name)
             os.system("git pull")
         except Exception as e:
-            print(f"failed: {str(e)}")
+            logger.error(f"failed: {str(e)}")
 
     def check(self) -> None:
         return None

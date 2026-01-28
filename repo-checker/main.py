@@ -1,8 +1,14 @@
 import schedule
 import threading
 import time
+import logging
 
 from SimplifyJobs import SimplifyJobs
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 REPOS = [
     SimplifyJobs()

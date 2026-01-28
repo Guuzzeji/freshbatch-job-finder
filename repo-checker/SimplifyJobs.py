@@ -1,9 +1,12 @@
 import json
 import asyncio
+import logging
 from datetime import datetime, timedelta
 from pydriller import Repository, Commit
 
 from interface import RepoChangesParser, JobInformation, ALL_REPO_SAVE_PATH
+
+logger = logging.getLogger(__name__)
 
 class SimplifyJobs(RepoChangesParser):
     __repo_name = "SimplifyJobs-New-Grad-Positions"
@@ -19,7 +22,7 @@ class SimplifyJobs(RepoChangesParser):
 
             for key in check_keys:
                 if key not in report:
-                    print("missing key: " + key)
+                    logger.warning("missing key: " + key)
                     return None
 
             return JobInformation(
@@ -35,7 +38,7 @@ class SimplifyJobs(RepoChangesParser):
                 report["category"]
             )
         except Exception as e:
-            print(f"failed: {str(e)}")
+            logger.error(f"failed: {str(e)}")
             return None
 
     def parse_job_data(self, diff: dict[str, list[tuple[int, str]]]) -> list[JobInformation]:
@@ -91,7 +94,7 @@ class SimplifyJobs(RepoChangesParser):
             for file in commit.modified_files:
                 jobs.extend(self.parse_job_data(file.diff_parsed))
 
-        print(f"found {len(jobs)} jobs")
+        logger.info(f"found {len(jobs)} jobs")
 
         if len(jobs) > 0:
             asyncio.run(super().add_jobs_batch(jobs))
