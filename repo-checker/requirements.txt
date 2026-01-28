@@ -1,0 +1,10 @@
+gitdb==4.0.12
+GitPython==3.1.46
+lizard==1.20.0
+pathspec==1.0.4
+PyDriller==2.9
+Pygments==2.19.2
+pytz==2025.2
+schedule==1.2.2
+smmap==5.0.2
+types-pytz==2025.2.0.20251108
