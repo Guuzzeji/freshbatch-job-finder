@@ -7,7 +7,7 @@ from SimplifyJobs import SimplifyJobs
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s | %(levelname)s - %(message)s'
 )
 
 REPOS = [
@@ -15,6 +15,7 @@ REPOS = [
 ]
 
 def job():
+    logging.info("Running repo-checker")
     threads = []
     
     for repo in REPOS:
@@ -28,6 +29,7 @@ def job():
 schedule.every(5).seconds.do(job)
 
 if __name__ == "__main__":
+    logging.info("Starting repo-checker")
     while True:
         schedule.run_pending()
         time.sleep(1)
