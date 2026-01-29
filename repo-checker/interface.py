@@ -82,8 +82,8 @@ class RepoChangesParser:
         webhook_worker_queue = Queue('webhook', opts={'connection': redis_url})
 
         try:
-            for job in jobs:
-                await webhook_worker_queue.add(str(uuid.uuid4()), job.dump())
+            jobs_batch = [job.dump() for job in jobs]
+            await webhook_worker_queue.add(str(uuid.uuid4()), json.dumps(jobs_batch))
         finally:
             await webhook_worker_queue.close()
 
