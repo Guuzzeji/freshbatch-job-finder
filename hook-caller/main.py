@@ -1,11 +1,14 @@
 import os
 import redis
 import threading
+import sys
 from time import sleep
 from dotenv import load_dotenv
 
-from worker import create_worker
-from manager import fan_out_work
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+
+from src.worker import create_worker
+from src.producer import fan_out_work
 
 load_dotenv()
 
