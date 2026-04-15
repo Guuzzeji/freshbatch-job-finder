@@ -78,14 +78,11 @@ class RepoChangesParser:
         redis_conn.close()
 
     async def add_jobs_batch(self, jobs: list[JobInformation]) -> None:
-        redis_url = "redis://" + (os.getenv('REDIS_HOST') or 'localhost') + ":" + (os.getenv('REDIS_PORT') or '6379')
-        webhook_worker_queue = Queue('webhook', opts={'connection': redis_url})
-
-        try:
-            jobs_batch = [job.dump() for job in jobs]
-            await webhook_worker_queue.add(str(uuid.uuid4()), json.dumps(jobs_batch))
-        finally:
-            await webhook_worker_queue.close()
+        redis_conn = self.__open_connection()
+        print(jobs)
+        jobs_batch = [job.dump() for job in jobs]
+        redis_conn.lpush("webhook-payload", json.dumps(jobs_batch))
+        redis_conn.close()
 
     def __create_repo_folder(self) -> None:
         if not os.path.exists(ALL_REPO_SAVE_PATH):
