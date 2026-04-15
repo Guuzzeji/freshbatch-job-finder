@@ -3,8 +3,11 @@ import threading
 import time
 import logging
 import redis
+import sys
+import os
 
-from SimplifyJobs import SimplifyJobs
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+from repos.SimplifyJobs import SimplifyJobs
 
 logging.basicConfig(
     level=logging.INFO,

@@ -4,7 +4,8 @@ import logging
 from datetime import datetime, timedelta
 from pydriller import Repository, Commit
 
-from interface import RepoChangesParser, JobInformation, ALL_REPO_SAVE_PATH
+from shared.interface import JobInformation
+from repo_change_parser import RepoChangesParser, ALL_REPO_SAVE_PATH
 
 logger = logging.getLogger(__name__)
 
