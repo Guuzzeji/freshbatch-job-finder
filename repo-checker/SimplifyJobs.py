@@ -98,6 +98,3 @@ class SimplifyJobs(RepoChangesParser):
 
         if len(jobs) > 0:
             asyncio.run(super().add_jobs_batch(jobs))
-
-if __name__ == "__main__":
-    SimplifyJobs().check()

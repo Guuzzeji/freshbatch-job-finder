@@ -2,6 +2,7 @@ import schedule
 import threading
 import time
 import logging
+import redis
 
 from SimplifyJobs import SimplifyJobs
 
@@ -10,8 +11,14 @@ logging.basicConfig(
     format='%(asctime)s | %(levelname)s - %(message)s'
 )
 
+redis_pool = redis.ConnectionPool(
+    host="localhost", port=6379,
+    max_connections=2,  # one per worker + headroom
+    decode_responses=True
+)
+
 REPOS = [
-    SimplifyJobs()
+    SimplifyJobs(redis_pool)
 ]
 
 def job():

@@ -59,8 +59,11 @@ ALL_REPO_SAVE_PATH = os.getcwd() + "/repos/"
 
 class RepoChangesParser:
 
+    def __init__(self, redis_pool) -> None:
+        self.__redis_pool = redis_pool
+
     def __open_connection(self) -> redis.Redis:
-        return redis.Redis(host=os.getenv('REDIS_HOST') or 'localhost', port=int(os.getenv('REDIS_PORT') or 6379), db=0, decode_responses=True)
+        return redis.Redis(connection_pool=self.__redis_pool)
 
     def get_last_commit_date(self, repo_name: str) -> datetime:
         redis_conn = self.__open_connection()
