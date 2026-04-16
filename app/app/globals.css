@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  --brown: #4a2610;
+  --brown-mid: #7a3b10;
+  --caramel: #c8720a;
+  --caramel-light: #f5a623;
+  --cream: #fdf6ec;
+  --cream-dark: #f0ddb8;
+  --chip: #2e1505;
+  --green: #2d6a4f;
+  --border: #d4a96a;
+  --border-light: #e8d0b0;
+  --muted: #b8977a;
+  --white: #ffffff;
+}
+
+body {
+  font-family: var(--font-fraunces), "Fraunces", serif;
+  background: #f5edd8;
+  color: var(--brown);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes popin {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes tick {
+  from {
+    transform: translateX(100vw);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cookieFloatBack {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(-1.5deg);
+  }
+}
+
+@keyframes cookieFloatMid {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -12px, 0) rotate(1.8deg);
+  }
+}
+
+@keyframes cookieFloatFront {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -16px, 0) rotate(-2deg);
+  }
+}
+
+.cookie-canvas {
+  overflow: visible;
+}
+
+.cookie-layer {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms ease-out;
+  will-change: transform;
+}
+
+.cookie-layer-back {
+  animation: cookieFloatBack 8s ease-in-out infinite;
+}
+
+.cookie-layer-mid {
+  animation: cookieFloatMid 10s ease-in-out infinite;
+}
+
+.cookie-layer-front {
+  animation: cookieFloatFront 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cookie-layer {
+    transition: none;
+    animation: none;
+  }
+}
