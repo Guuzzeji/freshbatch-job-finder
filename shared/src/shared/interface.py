@@ -48,6 +48,32 @@ class JobInformation:
     
     def dump(self) -> str:
         return json.dumps(self.to_json())
+    
+    @staticmethod
+    def from_string(json_str: str) -> JobInformation:
+        json_obj = json.loads(json_str)
+        return JobInformation(
+            is_fte=json_obj["is_fte"],
+            is_intern=json_obj["is_intern"],
+            repo_name=json_obj["repo_name"],
+            company_name=json_obj["company_name"],
+            title=json_obj["title"],
+            date_posted=int(json_obj["date_posted"]),
+            url=json_obj["url"],
+            source=json_obj["source"],
+            degrees=json_obj["degrees"],
+            sponsorship=json_obj["sponsorship"],
+            locations=json_obj["locations"],
+            category=json_obj["category"]
+        ) 
+
+    @staticmethod
+    def from_string_list(json_str_list: str) -> list[JobInformation]:
+        json_obj = json.loads(json_str_list)
+        result = []
+        for job in json_obj:
+            result.append(JobInformation.from_string(job))
+        return result
 
 class HookerInformation:
     def __init__(self,
@@ -67,3 +93,11 @@ class HookerInformation:
     
     def dump(self) -> str:
         return json.dumps(self.to_json())
+
+    @staticmethod
+    def from_string(json_str: str) -> HookerInformation:
+        json_obj = json.loads(json_str)
+        return HookerInformation(
+            sign_key=json_obj["sign_key"],
+            hook_url=json_obj["hook_url"]
+        )

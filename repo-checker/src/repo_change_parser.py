@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import logging
 
 from shared.interface import JobInformation
+from shared.constant import QUEUE_NAME_PAYLOADS_FANOUT, REPO_DATE_KEY
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class RepoChangesParser:
 
     def get_last_commit_date(self, repo_name: str) -> datetime:
         redis_conn = self.__open_connection()
-        redis_date = redis_conn.get(repo_name + ":last_commit_date")
+        redis_date = redis_conn.get(f"{repo_name}:{REPO_DATE_KEY}")
         redis_conn.close()
 
         if redis_date is not None:
@@ -34,14 +35,14 @@ class RepoChangesParser:
 
     def save_commit_date(self, date: datetime, repo_name: str) -> None:
         redis_conn = self.__open_connection()
-        redis_conn.set(repo_name + ":last_commit_date", date.isoformat())
+        redis_conn.set(f"{repo_name}:{REPO_DATE_KEY}", date.isoformat())
         redis_conn.close()
 
     async def add_jobs_batch(self, jobs: list[JobInformation]) -> None:
         redis_conn = self.__open_connection()
         print(jobs)
         jobs_batch = [job.dump() for job in jobs]
-        redis_conn.lpush("webhook-payload", json.dumps(jobs_batch))
+        redis_conn.lpush(QUEUE_NAME_PAYLOADS_FANOUT, json.dumps(jobs_batch))
         redis_conn.close()
 
     def __create_repo_folder(self) -> None:

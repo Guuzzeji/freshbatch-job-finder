@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
 from src.worker import create_worker
-from src.producer import fan_out_work
+from src.producer import create_producer
+from shared.constant import QUEUE_NAME_PAYLOADS_FANOUT, QUEUE_NAME_PAYLOAD_SEND, QUEUE_NAME_PAYLOAD_PROCESS_WORKER
 
 load_dotenv()
-
 
 THREAD_COUNT = int(os.getenv('THREAD_COUNT') or 5)
 REDIS_HOST = str(os.getenv('REDIS_HOST') or 'localhost')
@@ -19,24 +19,52 @@ REDIS_PORT = int(os.getenv('REDIS_PORT') or 6379)
 
 
 if __name__ == "__main__":
+    managed_threads = []
+
     redis_pool = redis.ConnectionPool(
         host=REDIS_HOST, port=REDIS_PORT,
         max_connections=THREAD_COUNT + 2,  # one per worker + headroom
         decode_responses=True
     )
 
-    threads = []
     for i in range(THREAD_COUNT):
-        thread = threading.Thread(target=create_worker, args=(redis_pool, "webhook-queue"))
+        target = create_worker
+        args = (redis_pool, i, QUEUE_NAME_PAYLOAD_PROCESS_WORKER, QUEUE_NAME_PAYLOAD_SEND)
+        
+        thread = threading.Thread(target=target, args=args)
         thread.start()
-        threads.append(thread)
+        
+        managed_threads.append({
+            "name": f"Worker-{i}",
+            "target": target,
+            "args": args,
+            "thread_obj": thread
+        })
 
-    redis_conn = redis.Redis(connection_pool=redis_pool)
+    producer_target = create_producer
+    producer_args = (redis_pool, QUEUE_NAME_PAYLOADS_FANOUT, QUEUE_NAME_PAYLOAD_SEND)
+    
+    producer_thread = threading.Thread(target=producer_target, args=producer_args)
+    producer_thread.start()
+    
+    managed_threads.append({
+        "name": "Producer",
+        "target": producer_target,
+        "args": producer_args,
+        "thread_obj": producer_thread
+    })
+
+    # 3. Supervisor Loop
+    print("Supervisor started. Monitoring threads...")
     while True:
-        payload = redis_conn.lpop("webhook-payload")
-        print("payload: " + str(payload))
-        if payload is None:
-            sleep(5)
-            continue
-
-        fan_out_work(str(payload), redis_pool, "webhook-queue")
+        sleep(2)
+        for t_info in managed_threads:
+            if not t_info["thread_obj"].is_alive():
+                print(f"[WARNING] {t_info['name']} died. Restarting...")
+                
+                # Create a brand new thread using the stored blueprint
+                new_thread = threading.Thread(target=t_info["target"], args=t_info["args"])
+                new_thread.start()
+                
+                # Replace the old dead thread object with the new living one
+                t_info["thread_obj"] = new_thread

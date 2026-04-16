@@ -36,7 +36,9 @@ class SimplifyJobs(RepoChangesParser):
                 report["degrees"],
                 report["sponsorship"],
                 report["locations"],
-                report["category"]
+                True,
+                False,
+                report["category"],
             )
         except Exception as e:
             logger.error(f"failed: {str(e)}")

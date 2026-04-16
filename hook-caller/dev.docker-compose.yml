@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:17-alpine
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - dev-main-db:/var/lib/postgresql/data
       - ./sql/dev_init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_PASSWORD: mySecretPassword
@@ -14,4 +14,4 @@ services:
       - "5432:5432"
 
 volumes:
-  db-data:
+  dev-main-db:
