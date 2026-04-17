@@ -1,17 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Ticker from "@/components/Ticker";
 import CookieBackground from "@/components/CookieBackground";
 import JobCard from "@/components/JobCard";
 import StepCard from "@/components/StepCard";
-import { MOCK_JOBS } from "@/lib/mock-data";
+import { MOCK_JOB_POOL, type Job } from "@/lib/mock-data";
 import {
   getStoredWebhookEndpoint,
   isValidWebhookEndpoint,
   WEBHOOK_STORAGE_KEY,
 } from "@/lib/webhook";
+
+const HERO_STATS = [
+  {
+    label: "jobs today",
+    target: 2341,
+    prefix: "",
+    suffix: "",
+    decimals: 0,
+  },
+  {
+    label: "avg bake time",
+    target: 1.8,
+    prefix: "~",
+    suffix: "s",
+    decimals: 1,
+  },
+  {
+    label: "registered job goblins",
+    target: 847,
+    prefix: "",
+    suffix: "",
+    decimals: 0,
+  },
+  {
+    label: "student wallets harmed",
+    target: 0,
+    prefix: "$",
+    suffix: "",
+    decimals: 0,
+  },
+] as const;
+
+function formatStatValue(
+  value: number,
+  options: { prefix: string; suffix: string; decimals: number },
+) {
+  const formatted =
+    options.decimals > 0
+      ? value.toFixed(options.decimals)
+      : Math.round(value).toLocaleString();
+
+  return `${options.prefix}${formatted}${options.suffix}`;
+}
+
+function pickRandomJobs(count: number) {
+  const shuffled = [...MOCK_JOB_POOL];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled.slice(0, count).map((job, index) => ({
+    id: `${job.co}-${job.role}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+    job,
+  }));
+}
 
 export default function LandingPage() {
   const [savedEndpoint] = useState(() => getStoredWebhookEndpoint());
@@ -28,10 +85,61 @@ export default function LandingPage() {
   const [bakeColor, setBakeColor] = useState<string | undefined>(
     savedEndpoint ? "var(--green)" : undefined,
   );
+  const [displayedStats, setDisplayedStats] = useState(() =>
+    HERO_STATS.map((stat) => formatStatValue(0, stat)),
+  );
+  const [jobCards, setJobCards] = useState<Array<{ id: string; job: Job }>>(() =>
+    pickRandomJobs(6),
+  );
   const navLinkClass =
     "rounded-full border border-[color:var(--border)] bg-transparent px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] transition hover:bg-[color:var(--cream-dark)]";
   const statClass =
-    "flex min-w-[120px] flex-col items-center gap-1 rounded-2xl border border-[color:var(--border-light)] bg-white/80 px-4 py-3 backdrop-blur-sm";
+    "animate-[statRise_0.8s_ease_both] flex min-w-[120px] flex-col items-center gap-1 rounded-2xl border border-[color:var(--border-light)] bg-white/80 px-4 py-3 backdrop-blur-sm";
+
+  useEffect(() => {
+    let frameId = 0;
+    const startTime = performance.now();
+    const durationMs = 1500;
+
+    const tick = (now: number) => {
+      const rawProgress = Math.min((now - startTime) / durationMs, 1);
+      const easedProgress = 1 - (1 - rawProgress) ** 3;
+
+      setDisplayedStats(
+        HERO_STATS.map((stat) =>
+          formatStatValue(stat.target * easedProgress, stat),
+        ),
+      );
+
+      if (rawProgress < 1) {
+        frameId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setJobCards((currentJobs) => {
+        const nextJobs = [...currentJobs];
+        const replaceIndex = Math.floor(Math.random() * nextJobs.length);
+        const nextJob =
+          MOCK_JOB_POOL[Math.floor(Math.random() * MOCK_JOB_POOL.length)];
+
+        nextJobs[replaceIndex] = {
+          id: `${nextJob.co}-${nextJob.role}-${Date.now()}-${replaceIndex}`,
+          job: nextJob,
+        };
+
+        return nextJobs;
+      });
+    }, 2200);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const saveHook = () => {
     const trimmedUrl = hookUrl.trim();
@@ -69,7 +177,9 @@ export default function LandingPage() {
           {navOpen ? "✕" : "☰"}
         </button>
         <div className="hidden items-center gap-[6px] sm:flex">
-          <div className={navLinkClass}>docs</div>
+          <Link href="/docs" className={navLinkClass}>
+            docs
+          </Link>
           <div className={navLinkClass}>twitter/x</div>
           <Link
             href="/dashboard"
@@ -81,7 +191,9 @@ export default function LandingPage() {
       </nav>
       {navOpen && (
         <div className="z-20 flex flex-col gap-2 border-b border-dashed border-[color:var(--border)] bg-[color:var(--cream)] px-6 py-4 sm:hidden">
-          <div className={navLinkClass}>docs</div>
+          <Link href="/docs" className={navLinkClass}>
+            docs
+          </Link>
           <div className={navLinkClass}>twitter/x</div>
           <Link
             href="/dashboard"
@@ -145,38 +257,20 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div className={statClass}>
-              <span className="text-[1.4rem] font-black text-[color:var(--caramel)]">
-                2,341
-              </span>
-              <span className="font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[0.8px] text-[color:var(--brown-mid)]">
-                jobs today
-              </span>
-            </div>
-            <div className={statClass}>
-              <span className="text-[1.4rem] font-black text-[color:var(--caramel)]">
-                ~1.8s
-              </span>
-              <span className="font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[0.8px] text-[color:var(--brown-mid)]">
-                avg bake time
-              </span>
-            </div>
-            <div className={statClass}>
-              <span className="text-[1.4rem] font-black text-[color:var(--caramel)]">
-                847
-              </span>
-              <span className="font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[0.8px] text-[color:var(--brown-mid)]">
-                hungry students
-              </span>
-            </div>
-            <div className={statClass}>
-              <span className="text-[1.4rem] font-black text-[color:var(--caramel)]">
-                $0
-              </span>
-              <span className="font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[0.8px] text-[color:var(--brown-mid)]">
-                forever &amp; always
-              </span>
-            </div>
+            {HERO_STATS.map((stat, index) => (
+              <div
+                key={stat.label}
+                className={statClass}
+                style={{ animationDelay: `${index * 120}ms` }}
+              >
+                <span className="text-[1.4rem] font-black text-[color:var(--caramel)]">
+                  {displayedStats[index]}
+                </span>
+                <span className="font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[0.8px] text-[color:var(--brown-mid)]">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -184,15 +278,18 @@ export default function LandingPage() {
       <div className="py-2 text-center text-[color:var(--border)]">• • •</div>
 
       <div className="mx-auto max-w-[1140px] px-6 py-6 max-sm:px-5">
-        <div className="mb-1 font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1.5px] text-[color:var(--caramel)]">
-          🔥 latest batch
+        <div className="mb-1 flex items-center gap-2 font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1.5px] text-[color:var(--caramel)]">
+          <span>🔥 latest batch</span>
+          <span className="rounded-full border border-[color:var(--border)] bg-white/80 px-2 py-[2px] text-[9px] tracking-[1.2px] text-[color:var(--brown-mid)] animate-[pulse_1.8s_infinite]">
+            live mock feed
+          </span>
         </div>
         <div className="mb-6 text-[clamp(1.8rem,4vw,2.8rem)] leading-none font-black tracking-[-1.5px] text-[color:var(--brown)]">
           fresh out the oven
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {MOCK_JOBS.map((job, i) => (
-            <JobCard key={i} job={job} />
+          {jobCards.map(({ id, job }) => (
+            <JobCard key={id} job={job} />
           ))}
         </div>
       </div>
