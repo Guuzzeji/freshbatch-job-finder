@@ -1,5 +1,6 @@
 import hmac
 import hashlib
+import json
 import requests
 import redis
 from time import sleep
@@ -10,8 +11,27 @@ from .local_shared import PAYLOAD_DIVIDER
 
 logger = logging.getLogger(__name__)
 
-def sign_package(package: str, secret: str) -> str:
-    return hmac.new(secret.encode("utf-8"), package.encode("utf-8"), hashlib.sha256).hexdigest()
+def sign_package(jobs: list["JobInformation"], secret: str) -> str:
+    """
+    Produce a deterministic HMAC-SHA256 signature over the job list.
+
+    Canonical form:
+      - Each JobInformation is serialised via to_json() (a plain dict).
+      - Keys within every dict are sorted alphabetically (sort_keys=True).
+      - The list itself is sorted by each job's `url` field.
+      - The whole structure is compacted (no extra spaces) so the byte
+        sequence is unambiguous for any receiver to reproduce.
+    """
+    sorted_jobs = sorted(
+        [job.to_json() for job in jobs],
+        key=lambda j: j["url"],
+    )
+    canonical = json.dumps(sorted_jobs, sort_keys=True, separators=(",", ":"))
+    return hmac.new(
+        secret.encode("utf-8"),
+        canonical.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
 
 def decode_package(package: str) -> dict:
     chunks = package.split(PAYLOAD_DIVIDER)
@@ -38,7 +58,7 @@ def create_worker(redis_pool, worker_id: int, worker_queue: str, job_queue: str)
             
             logging.info(f"worker {worker_queue} found job")
             package = decode_package(str(queue_pop_msg))
-            signature = sign_package(str(package["data"]), package["hook_metadata"].sign_key)
+            signature = sign_package(package["data"], package["hook_metadata"].sign_key)
 
             try:
                 logging.info(f"worker {worker_queue} sending job")
@@ -47,7 +67,7 @@ def create_worker(redis_pool, worker_id: int, worker_queue: str, job_queue: str)
                         headers={"Content-Type": "application/json", "webhook-signature": signature}, 
                         timeout=3,
                         json={
-                            "data": [job.dump() for job in package["data"]],
+                            "data": [job.to_json() for job in package["data"]],
                         })
                 if http_call.status_code != 200:
                     logging.info(f"registered hook failed with status (not our fault): {http_call.status_code}")
