@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import redis
+import logging
 from time import sleep
 from urllib.parse import urlsplit
 from dotenv import load_dotenv
@@ -9,6 +10,8 @@ from shared.interface import HookerInformation
 from .local_shared import PAYLOAD_DIVIDER
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 POSTGRES_DSN_URL = str(os.getenv('POSTGRES_DSN_URL'))
 BATCH_SIZE = int(os.getenv('BATCH_SIZE') or 100)
@@ -29,8 +32,6 @@ def producer_handler(payload: str, redis_pool, queue_name: str):
         # NOTE: if redis connection or database connection fails, we don't really have a backup plan,
         # just long error and try again next time and drop updates
         redis_conn = redis.Redis(connection_pool=redis_pool)
-        total_hooks = 0
-
         parsed_url = parse_postgres_url(POSTGRES_DSN_URL)
         pg_conn = psycopg2.connect(
             host=parsed_url["host"],
@@ -49,11 +50,8 @@ def producer_handler(payload: str, redis_pool, queue_name: str):
                     hook_url=row[0]
                 )
                 job_for_worker = f"{hook_metadata.dump()}{PAYLOAD_DIVIDER}{payload}"
-                # print(f"CREATING PAYLOAD: {job_for_worker}")
                 redis_conn.lpush(queue_name, job_for_worker)
-                total_hooks += 1
-                if total_hooks % BATCH_SIZE == 0:
-                    print(f"sent {total_hooks} hooks")
+                logger.info(f"pushed job to queue for {hook_metadata.hook_url}")
 
         pg_conn.close()
     except Exception as e:
@@ -61,14 +59,17 @@ def producer_handler(payload: str, redis_pool, queue_name: str):
 
 def create_producer(redis_pool, fanout_queue: str, send_queue: str):
     try:
+        logger.info("producer started")
         redis_conn = redis.Redis(connection_pool=redis_pool)
         while True:
+            logger.info("producer checking for jobs")
+            # NOTE: We can do this because we always have a single producer
             payload = redis_conn.lpop(fanout_queue)
             if payload is None:
+                logger.info("producer no jobs found")
                 sleep(5)
                 continue
-
-            print("payload: " + str(payload))
+            logger.info("producer found job")
             producer_handler(str(payload), redis_pool, send_queue)
     except Exception as e:
-        print(f"failed: {str(e)}")
+        logger.error(f"producer failed: {str(e)}")
