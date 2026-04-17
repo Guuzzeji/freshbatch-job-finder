@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 import logging
 
 from shared.interface import JobInformation
-from shared.constant import QUEUE_NAME_PAYLOADS_FANOUT, REPO_DATE_KEY
+from shared.constant import QUEUE_NAME_PAYLOADS_FANOUT
+
+REPO_DATE_KEY = ":last_commit_date"
 
 load_dotenv()
 logger = logging.getLogger(__name__)
