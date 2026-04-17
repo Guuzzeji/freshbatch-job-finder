@@ -2,7 +2,6 @@ import json
 
 class JobInformation:
     def __init__(self,
-                 repo_name: str,
                  company_name: str,
                  title: str,
                  date_posted: int,
@@ -18,7 +17,6 @@ class JobInformation:
         self.is_test = is_test
         self.is_fte = is_fte
         self.is_intern = is_intern
-        self.repo_name = repo_name
         self.company_name = company_name
         self.title = title
         self.date_posted = date_posted
@@ -34,7 +32,6 @@ class JobInformation:
             "is_test": self.is_test,
             "is_fte": self.is_fte,
             "is_intern": self.is_intern,
-            "repo_name": self.repo_name,
             "company_name": self.company_name,
             "title": self.title,
             "date_posted": self.date_posted,

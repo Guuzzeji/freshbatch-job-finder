@@ -27,7 +27,6 @@ class SimplifyJobs(RepoChangesParser):
                     return None
 
             return JobInformation(
-                self.__repo_name,
                 report["company_name"],
                 report["title"],
                 report["date_posted"],
