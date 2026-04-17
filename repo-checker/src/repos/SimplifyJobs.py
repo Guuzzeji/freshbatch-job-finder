@@ -95,6 +95,7 @@ class SimplifyJobs(RepoChangesParser):
         jobs: list[JobInformation] = []
         for commit in commits:
             for file in commit.modified_files:
+                # TODO: add tracker for commit hash to get track of which commits were parsed
                 jobs.extend(self.parse_job_data(file.diff_parsed))
 
         logger.info(f"found {len(jobs)} jobs")
