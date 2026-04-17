@@ -40,7 +40,6 @@ class RepoChangesParser:
 
     async def add_jobs_batch(self, jobs: list[JobInformation]) -> None:
         redis_conn = self.__open_connection()
-        print(jobs)
         jobs_batch = [job.dump() for job in jobs]
         redis_conn.lpush(QUEUE_NAME_PAYLOADS_FANOUT, json.dumps(jobs_batch))
         redis_conn.close()
