@@ -17,7 +17,9 @@ REDIS_PORT = int(os.getenv('REDIS_PORT') or 6379)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s | %(levelname)s - %(message)s'
+    format='%(asctime)s | %(levelname)s - %(message)s',
+    filename='repo-checker.log',
+    filemode='a'
 )
 
 redis_pool = redis.ConnectionPool(
@@ -45,7 +47,6 @@ def job():
 schedule.every(5).seconds.do(job)
 
 if __name__ == "__main__":
-    logging.info("Starting repo-checker")
     while True:
         schedule.run_pending()
         time.sleep(1)
