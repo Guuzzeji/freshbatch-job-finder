@@ -13,7 +13,9 @@ class JobInformation:
                  locations: list[str],
                  is_fte: bool,
                  is_intern: bool,
-                 category: str) -> None:
+                 category: str,
+                 is_test: bool = False) -> None:
+        self.is_test = is_test
         self.is_fte = is_fte
         self.is_intern = is_intern
         self.repo_name = repo_name
@@ -29,6 +31,7 @@ class JobInformation:
 
     def to_json(self) -> dict:
         return {
+            "is_test": self.is_test,
             "is_fte": self.is_fte,
             "is_intern": self.is_intern,
             "repo_name": self.repo_name,
@@ -53,6 +56,7 @@ class JobInformation:
     def from_string(json_str: str) -> JobInformation:
         json_obj = json.loads(json_str)
         return JobInformation(
+            is_test=json_obj["is_test"],
             is_fte=json_obj["is_fte"],
             is_intern=json_obj["is_intern"],
             repo_name=json_obj["repo_name"],
