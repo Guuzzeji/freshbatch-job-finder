@@ -1,28 +1,24 @@
-"use client";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import DashboardShell from "./DashboardShell";
 
-import { useState } from "react";
-import Sidebar from "@/components/Sidebar";
-import MobileNav from "@/components/MobileNav";
-import { ToastProvider } from "@/components/Toast";
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/");
+  }
 
   return (
-    <ToastProvider>
-      <div className="flex min-h-screen">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex flex-1 flex-col">
-          <MobileNav onMenuToggle={() => setSidebarOpen((prev) => !prev)} />
-          <main className="relative flex-1 overflow-y-auto p-5 lg:ml-[200px] lg:p-8">
-            {children}
-          </main>
-        </div>
-      </div>
-    </ToastProvider>
+    <DashboardShell user={session.user}>
+      {children}
+    </DashboardShell>
   );
 }
