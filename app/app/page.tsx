@@ -12,6 +12,7 @@ import {
   isValidWebhookEndpoint,
   WEBHOOK_STORAGE_KEY,
 } from "@/lib/webhook";
+import { authClient } from "@/lib/auth-client";
 
 const HERO_STATS = [
   {
@@ -91,6 +92,7 @@ export default function LandingPage() {
   const [jobCards, setJobCards] = useState<Array<{ id: string; job: Job }>>(() =>
     pickRandomJobs(6),
   );
+  const { data: session } = authClient.useSession();
   const navLinkClass =
     "rounded-full border border-[color:var(--border)] bg-transparent px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] transition hover:bg-[color:var(--cream-dark)]";
   const statClass =
@@ -181,12 +183,34 @@ export default function LandingPage() {
             docs
           </Link>
           <div className={navLinkClass}>twitter/x</div>
-          <Link
-            href="/dashboard"
-            className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-white no-underline transition hover:bg-[color:var(--brown-mid)]"
-          >
-            Sign In - GitHub
-          </Link>
+          {session ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-white no-underline transition hover:bg-[color:var(--brown-mid)]"
+            >
+              {session.user.image ? (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name ?? "avatar"}
+                  className="h-5 w-5 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/30 text-[10px] font-bold">
+                  {(session.user.name ?? "?")[0].toUpperCase()}
+                </span>
+              )}
+              dashboard →
+            </Link>
+          ) : (
+            <button
+              onClick={() =>
+                authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
+              }
+              className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-white transition hover:bg-[color:var(--brown-mid)]"
+            >
+              Sign In with GitHub
+            </button>
+          )}
         </div>
       </nav>
       {navOpen && (
@@ -195,12 +219,23 @@ export default function LandingPage() {
             docs
           </Link>
           <div className={navLinkClass}>twitter/x</div>
-          <Link
-            href="/dashboard"
-            className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] text-center font-[var(--font-dm-mono)] text-[11px] text-white no-underline transition hover:bg-[color:var(--brown-mid)]"
-          >
-            open dashboard
-          </Link>
+          {session ? (
+            <Link
+              href="/dashboard"
+              className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] text-center font-[var(--font-dm-mono)] text-[11px] text-white no-underline transition hover:bg-[color:var(--brown-mid)]"
+            >
+              dashboard →
+            </Link>
+          ) : (
+            <button
+              onClick={() =>
+                authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
+              }
+              className="w-full rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] text-center font-[var(--font-dm-mono)] text-[11px] text-white transition hover:bg-[color:var(--brown-mid)]"
+            >
+              Sign In with GitHub
+            </button>
+          )}
         </div>
       )}
 
@@ -338,11 +373,22 @@ export default function LandingPage() {
           stop refreshing linkedin. point freshbatch at your own endpoint and
           let the jobs come to you.
         </p>
-        <Link href="/dashboard">
-          <button className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white transition hover:bg-[color:var(--brown-mid)]">
-            configure my endpoint →
+        {session ? (
+          <Link href="/dashboard">
+            <button className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white transition hover:bg-[color:var(--brown-mid)]">
+              configure my endpoint →
+            </button>
+          </Link>
+        ) : (
+          <button
+            onClick={() =>
+              authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
+            }
+            className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white transition hover:bg-[color:var(--brown-mid)]"
+          >
+            Sign In with GitHub →
           </button>
-        </Link>
+        )}
       </div>
     </div>
   );
