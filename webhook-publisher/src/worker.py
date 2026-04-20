@@ -15,7 +15,10 @@ from .local_shared import PAYLOAD_DIVIDER, parse_postgres_url
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-POSTGRES_DSN_URL = str(os.getenv('POSTGRES_DSN_URL'))
+_postgres_dsn = os.getenv('POSTGRES_DSN_URL')
+if not _postgres_dsn:
+    raise RuntimeError("POSTGRES_DSN_URL environment variable is not set")
+POSTGRES_DSN_URL: str = _postgres_dsn
 BATCH_SIZE = int(os.getenv('BATCH_SIZE') or 100)
 
 def sign_package(jobs: list["JobInformation"], secret: str) -> str:
@@ -62,16 +65,18 @@ def log_webhook_request(webhook_id: int, success: bool, error_message: str | Non
             password=parsed_url["password"],
             dbname=parsed_url["dbname"],
         )
-        with pg_conn.cursor() as cur:
-            cur.execute(
-                """
-                INSERT INTO webhooks_log (webhook_id, success, error_message, status_code, jobs_payload, is_test)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (webhook_id, success, error_message, status_code, jobs_payload, is_test)
-            )
-        pg_conn.commit()
-        pg_conn.close()
+        try:
+            with pg_conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO webhooks_log (webhook_id, success, error_message, status_code, jobs_payload, is_test)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (webhook_id, success, error_message, status_code, jobs_payload, is_test)
+                )
+            pg_conn.commit()
+        finally:
+            pg_conn.close()
     except Exception as e:
         logger.error(f"failed to log webhook request to db: {str(e)}")
 

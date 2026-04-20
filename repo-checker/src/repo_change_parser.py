@@ -1,8 +1,7 @@
 import os
-import uuid
 import json
 import redis
-from bullmq import Queue
+import subprocess
 from datetime import datetime
 from dotenv import load_dotenv
 import logging
@@ -52,16 +51,29 @@ class RepoChangesParser:
 
     def pull(self, repo_url: str, repo_name: str) -> None:
         self.__create_repo_folder()
+        repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
 
         try:
-            if not os.path.exists(ALL_REPO_SAVE_PATH + repo_name):
-                os.mkdir(ALL_REPO_SAVE_PATH + repo_name)
-                os.system("git clone " + repo_url + " " + ALL_REPO_SAVE_PATH + repo_name)
-
-            os.chdir(ALL_REPO_SAVE_PATH + repo_name)
-            os.system("git pull")
+            if not os.path.exists(repo_path):
+                os.makedirs(repo_path, exist_ok=True)
+                subprocess.run(
+                    ["git", "clone", repo_url, repo_path],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+            else:
+                subprocess.run(
+                    ["git", "pull"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=repo_path,
+                )
+        except subprocess.CalledProcessError as e:
+            logger.error(f"git command failed (repo={repo_name}): {e.stderr}")
         except Exception as e:
-            logger.error(f"failed: {str(e)}")
+            logger.error(f"pull failed (repo={repo_name}): {str(e)}")
 
     def check(self) -> None:
         return None
