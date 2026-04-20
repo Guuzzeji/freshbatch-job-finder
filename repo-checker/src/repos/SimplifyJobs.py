@@ -23,7 +23,7 @@ class SimplifyJobs(RepoChangesParser):
 
             for key in check_keys:
                 if key not in report:
-                    logger.warning("missing key: " + key)
+                    logger.warning(f"[SimplifyJobs] Skipping malformed job entry — missing required key '{key}' in JSON buffer")
                     return None
 
             return JobInformation(
@@ -40,7 +40,7 @@ class SimplifyJobs(RepoChangesParser):
                 report["category"],
             )
         except Exception as e:
-            logger.error(f"failed: {str(e)}")
+            logger.error(f"[SimplifyJobs] Failed to parse job report from JSON buffer: {str(e)}", exc_info=True)
             return None
 
     def parse_job_data(self, diff: dict[str, list[tuple[int, str]]]) -> list[JobInformation]:
@@ -97,7 +97,7 @@ class SimplifyJobs(RepoChangesParser):
                 # TODO: add tracker for commit hash to get track of which commits were parsed
                 jobs.extend(self.parse_job_data(file.diff_parsed))
 
-        logger.info(f"found {len(jobs)} jobs")
+        logger.info(f"[SimplifyJobs] Check complete — dispatched {len(jobs)} new job(s) to fanout queue")
 
         if len(jobs) > 0:
             asyncio.run(super().add_jobs_batch(jobs))

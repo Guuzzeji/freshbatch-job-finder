@@ -41,7 +41,7 @@ def producer_handler(payload: str, redis_pool, queue_name: str):
         try:
             jobs = JobInformation.from_string_list(payload)
             if not jobs:
-                logger.warning("producer_handler received empty job list, skipping")
+                logger.warning("[Producer] Received empty job list from fanout queue — nothing to enqueue, skipping")
                 return
             with pg_conn.cursor(name="hook_cursor") as cur:
                 cur.itersize = BATCH_SIZE
@@ -56,25 +56,25 @@ def producer_handler(payload: str, redis_pool, queue_name: str):
                     )
                     job_for_worker = f"{hook_metadata.dump()}{PAYLOAD_DIVIDER}{payload}"
                     redis_conn.lpush(queue_name, job_for_worker)
-                    logger.info(f"pushed job to queue for {hook_metadata.hook_url}")
+                    logger.info(f"[Producer] Enqueued job batch for webhook subscriber: url={hook_metadata.hook_url}")
         finally:
             pg_conn.close()
     except Exception as e:
-        logger.error(f"producer failed with handler: {str(e)}")
+        logger.error(f"[Producer] Handler failed while processing fanout payload: {str(e)}", exc_info=True)
 
 def create_producer(redis_pool, fanout_queue: str, send_queue: str):
     try:
-        logger.info("producer started")
+        logger.info("[Producer] Service started — polling fanout queue for job payloads")
         redis_conn = redis.Redis(connection_pool=redis_pool)
         while True:
-            logger.info("producer checking for jobs")
+            logger.info("[Producer] Polling fanout queue for new job payloads")
             # NOTE: We can do this because we always have a single producer
             payload = redis_conn.lpop(fanout_queue)
             if payload is None:
-                logger.info("producer no jobs found")
+                logger.info("[Producer] No pending payloads in fanout queue — sleeping 5s before next poll")
                 sleep(5)
                 continue
-            logger.info("producer found job")
+            logger.info("[Producer] Payload found — dispatching to producer_handler for webhook fanout")
             producer_handler(str(payload), redis_pool, send_queue)
     except Exception as e:
-        logger.error(f"producer failed with getting new jobs from queue: {str(e)}")
+        logger.error(f"[Producer] Fatal error reading from fanout queue — producer loop terminated: {str(e)}", exc_info=True)

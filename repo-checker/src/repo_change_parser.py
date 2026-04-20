@@ -71,9 +71,9 @@ class RepoChangesParser:
                     cwd=repo_path,
                 )
         except subprocess.CalledProcessError as e:
-            logger.error(f"git command failed (repo={repo_name}): {e.stderr}")
+            logger.error(f"[RepoChangesParser] git command failed for repo '{repo_name}': {e.stderr.strip()}", exc_info=True)
         except Exception as e:
-            logger.error(f"pull failed (repo={repo_name}): {str(e)}")
+            logger.error(f"[RepoChangesParser] Unexpected error while pulling repo '{repo_name}': {str(e)}", exc_info=True)
 
     def check(self) -> None:
         return None
