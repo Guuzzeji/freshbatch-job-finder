@@ -3,13 +3,20 @@ import hashlib
 import json
 import requests
 import redis
+import os
+import psycopg2
 from time import sleep
 import logging
+from dotenv import load_dotenv
 
 from shared.interface import JobInformation, HookerInformation
-from .local_shared import PAYLOAD_DIVIDER
+from .local_shared import PAYLOAD_DIVIDER, parse_postgres_url
 
+load_dotenv()
 logger = logging.getLogger(__name__)
+
+POSTGRES_DSN_URL = str(os.getenv('POSTGRES_DSN_URL'))
+BATCH_SIZE = int(os.getenv('BATCH_SIZE') or 100)
 
 def sign_package(jobs: list["JobInformation"], secret: str) -> str:
     """
@@ -42,40 +49,95 @@ def decode_package(package: str) -> dict:
         "data": JobInformation.from_string_list(chunks[1])
     }
 
+def log_webhook_request(webhook_id: int, success: bool, error_message: str | None, status_code: int | None, jobs_payload: str, is_test: bool):
+    if webhook_id < 0:
+        return
+    try:
+        logger.warning(f"logging webhook request to db: webhook_id={webhook_id}, success={success}, error_message={error_message}, status_code={status_code}, jobs_payload={jobs_payload}, is_test={is_test}")
+        parsed_url = parse_postgres_url(POSTGRES_DSN_URL)
+        pg_conn = psycopg2.connect(
+            host=parsed_url["host"],
+            port=parsed_url["port"],
+            user=parsed_url["username"],
+            password=parsed_url["password"],
+            dbname=parsed_url["dbname"],
+        )
+        with pg_conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO webhooks_log (webhook_id, success, error_message, status_code, jobs_payload, is_test)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (webhook_id, success, error_message, status_code, jobs_payload, is_test)
+            )
+        pg_conn.commit()
+        pg_conn.close()
+    except Exception as e:
+        logger.error(f"failed to log webhook request to db: {str(e)}")
+
 def create_worker(redis_pool, worker_id: int, worker_queue: str, job_queue: str):
     try:
         redis_conn = redis.Redis(connection_pool=redis_pool)
         worker_queue = f"{worker_queue}{worker_id}"
-        logging.info(f"worker started - {worker_queue}")
+        logging.info(f"worker-{worker_id} started - {worker_queue}")
 
         while True:
-            logging.info(f"worker {worker_queue} checking for jobs")
+            logging.info(f"worker-{worker_id} | checking for jobs")
             queue_pop_msg = redis_conn.lmove(job_queue, worker_queue, 'RIGHT', 'LEFT')
             if queue_pop_msg is None:
-                logging.info(f"worker {worker_queue} no jobs found")
+                logging.info(f"worker-{worker_id} | no jobs found")
                 sleep(5)
                 continue
             
-            logging.info(f"worker {worker_queue} found job")
+            logging.info(f"worker-{worker_id} | {worker_queue} found job")
             package = decode_package(str(queue_pop_msg))
             signature = sign_package(package["data"], package["hook_metadata"].sign_key)
 
             try:
-                logging.info(f"worker {worker_queue} sending job")
+                logging.info(f"worker-{worker_id} | {worker_queue} sending job")
+                json_payload = {"data": [job.to_json() for job in package["data"]]}
                 http_call = requests.post(
                         package["hook_metadata"].hook_url, 
                         headers={"Content-Type": "application/json", "webhook-signature": signature}, 
                         timeout=3,
-                        json={
-                            "data": [job.to_json() for job in package["data"]],
-                        })
+                        json=json_payload)
+                
+                is_test = any(job.is_test for job in package["data"])
+                jobs_payload_str = json.dumps(json_payload["data"])
+
                 if http_call.status_code != 200:
-                    logging.info(f"registered hook failed with status (not our fault): {http_call.status_code}")
+                    logging.warning(f"worker-{worker_id} | webhook-id-{package["hook_metadata"].webhook_id} | registered hook failed with status (not our fault): {http_call.status_code}")
+                    log_webhook_request(
+                        webhook_id=package["hook_metadata"].webhook_id,
+                        success=False,
+                        error_message=http_call.text[:1000] if http_call.text else None,
+                        status_code=http_call.status_code,
+                        jobs_payload=jobs_payload_str,
+                        is_test=is_test
+                    )
                 else:
-                    logging.info(f"success sent jobs to hook")
+                    logging.info(f"worker-{worker_id} | webhook-id-{package["hook_metadata"].webhook_id} | success sent jobs to hook")
+                    log_webhook_request(
+                        webhook_id=package["hook_metadata"].webhook_id,
+                        success=True,
+                        error_message=None,
+                        status_code=http_call.status_code,
+                        jobs_payload=jobs_payload_str,
+                        is_test=is_test
+                    )
             except Exception as e:
-                logging.error(f"failed to send jobs to hook: {str(e)}")
+                logging.error(f"worker-{worker_id} | webhook-id-{package["hook_metadata"].webhook_id} | failed to send jobs to hook: {str(e)}")
+                is_test = any(job.is_test for job in package["data"])
+                jobs_payload_str = json.dumps([job.to_json() for job in package["data"]])
+                log_webhook_request(
+                    webhook_id=package["hook_metadata"].webhook_id,
+                    success=False,
+                    error_message=str(e)[:1000],
+                    status_code=None,
+                    jobs_payload=jobs_payload_str,
+                    is_test=is_test
+                )
             finally:
                 redis_conn.lrem(worker_queue, 1, queue_pop_msg) # pyright: ignore[reportArgumentType]
     except Exception as e:
-        logging.error(f"general error: {str(e)}")
+        logging.error(f"worker-{worker_id} | webhook-id-{package["hook_metadata"].webhook_id} | general error: {str(e)}")
