@@ -56,7 +56,6 @@ class JobInformation:
             is_test=json_obj["is_test"],
             is_fte=json_obj["is_fte"],
             is_intern=json_obj["is_intern"],
-            repo_name=json_obj["repo_name"],
             company_name=json_obj["company_name"],
             title=json_obj["title"],
             date_posted=int(json_obj["date_posted"]),
@@ -78,13 +77,16 @@ class JobInformation:
 
 class HookerInformation:
     def __init__(self,
+                 webhook_id: int,
                  sign_key: str,
                  hook_url: str) -> None:
+        self.webhook_id = webhook_id
         self.sign_key = sign_key
         self.hook_url = hook_url
 
     def to_json(self) -> dict:
         return {
+            "webhook_id": self.webhook_id,
             "sign_key": self.sign_key,
             "hook_url": self.hook_url
         }
@@ -96,9 +98,10 @@ class HookerInformation:
         return json.dumps(self.to_json())
 
     @staticmethod
-    def from_string(json_str: str) -> HookerInformation:
+    def from_string(json_str: str) -> 'HookerInformation':
         json_obj = json.loads(json_str)
         return HookerInformation(
+            webhook_id=json_obj.get("webhook_id", -1),
             sign_key=json_obj["sign_key"],
             hook_url=json_obj["hook_url"]
         )
