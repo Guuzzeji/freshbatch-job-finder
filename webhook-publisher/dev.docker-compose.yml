@@ -1,17 +1,20 @@
-version: "3"
-
 services:
-  db:
-    image: postgres:17-alpine
-    volumes:
-      - dev-main-db:/var/lib/postgresql/data
-      - ./sql/dev_init.sql:/docker-entrypoint-initdb.d/init.sql
+  webhook-publisher:
+    build:
+      context: ..
+      dockerfile: webhook-publisher/Dockerfile
+    container_name: webhook-publisher
+    env_file:
+      - ./.env
     environment:
-      POSTGRES_PASSWORD: mySecretPassword
-      POSTGRES_USER: myUser
-      POSTGRES_DB: myDb
-    ports:
-      - "5432:5432"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGRES_DSN_URL: postgresql://myUser:mySecretPassword@db:5432/myDb
+    restart: always
+    networks:
+      - dev-shared
 
-volumes:
-  dev-main-db:
+networks:
+  dev-shared:
+    external: true
+    name: web-hook-job-tracker-dev-shared
