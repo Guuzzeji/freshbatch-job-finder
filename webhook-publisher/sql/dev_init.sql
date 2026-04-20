@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS webhooks (
-    id          BIGINT PRIMARY KEY INCREMENT BY 1,
-    user_id     UUID NOT NULL,
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     UUID NOT NULL REFERENCES users (id),
     hook_url    TEXT NOT NULL,
     sign_key    TEXT NOT NULL,
     is_fte      BOOLEAN NOT NULL DEFAULT TRUE,
@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS webhooks (
 );
 
 CREATE TABLE IF NOT EXISTS webhooks_log (
-  webhook_id      BIGINT REFERENCES webhooks (id),
+  webhook_id      INT REFERENCES webhooks (id),
   created_at      TIMESTAMPTZ DEFAULT now(),
   success         BOOLEAN NOT NULL DEFAULT FALSE,
   error_message   TEXT DEFAULT NULL,
-  status_code     INTEGER DEFAULT NULL
-  jobs_payload    TEXT DEFAULT NULL
+  status_code     INTEGER DEFAULT NULL,
+  jobs_payload    TEXT DEFAULT NULL,
   is_test         BOOLEAN NOT NULL DEFAULT FALSE
-)
+);
 
 CREATE INDEX IF NOT EXISTS idx_webhooks_log_webhook_id ON webhooks_log (webhook_id);
 CREATE INDEX IF NOT EXISTS idx_webhooks_user_id ON webhooks (user_id);
