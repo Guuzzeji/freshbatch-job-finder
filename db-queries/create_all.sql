@@ -8,17 +8,18 @@ CREATE DATABASE auth_db;
 
 CREATE TABLE IF NOT EXISTS webhooks (
     id          BIGSERIAL PRIMARY KEY,
-    user_id     TEXT NOT NULL, -- NOTE: Use better auth user.id (user table get id type of text)
+    user_id     TEXT NOT NULL UNIQUE, -- NOTE: Use better auth user.id (user table get id type of text)
     hook_url    TEXT NOT NULL,
     sign_key    TEXT NOT NULL,
     is_fte      BOOLEAN NOT NULL DEFAULT TRUE,
     is_intern   BOOLEAN NOT NULL DEFAULT FALSE,
     is_active   BOOLEAN NOT NULL DEFAULT FALSE,
-    is_markdown BOOLEAN NOT NULL DEFAULT FALSE
+    is_markdown BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT chk_webhooks_any_stream_enabled CHECK (is_fte OR is_intern)
 );
 
 CREATE TABLE IF NOT EXISTS webhooks_log (
-  webhook_id      INT REFERENCES webhooks (id),
+  webhook_id      BIGINT REFERENCES webhooks (id),
   created_at      TIMESTAMPTZ DEFAULT now(),
   success         BOOLEAN NOT NULL DEFAULT FALSE,
   error_message   TEXT DEFAULT NULL,
