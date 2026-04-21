@@ -90,3 +90,4 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 ## Agent Note
 
 - **AI Agents:** When you make changes to this repository, please update `CLAUDE.md` so models and other agents have the correct, up-to-date context for the whole project.
+- **Git ignore guardrail:** Keep the repo-root ignore rule as `/lib/`, not `lib/`. A bare `lib/` pattern will also ignore `app/lib/`, which contains real frontend source files that must remain commit-able.
