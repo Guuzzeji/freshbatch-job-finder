@@ -1,7 +1,9 @@
 import LogItem from "@/components/LogItem";
-import { MOCK_LOGS } from "@/lib/mock-data";
+import { getWebhookLogsForCurrentUser } from "@/app/dashboard/actions";
 
-export default function DeliveryLogPage() {
+export default async function DeliveryLogPage() {
+  const logs = await getWebhookLogsForCurrentUser();
+
   return (
     <>
       <div className="mb-6">
@@ -17,9 +19,13 @@ export default function DeliveryLogPage() {
       </div>
 
       <div className="mt-4 flex flex-col gap-1.5">
-        {MOCK_LOGS.map((entry, i) => (
-          <LogItem key={i} entry={entry} />
-        ))}
+        {logs.length === 0 ? (
+          <div className="font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)]">
+            no deliveries yet
+          </div>
+        ) : (
+          logs.map((entry, i) => <LogItem key={i} entry={entry} />)
+        )}
       </div>
     </>
   );

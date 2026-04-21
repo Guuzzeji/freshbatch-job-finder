@@ -8,7 +8,7 @@ import { ToastProvider } from "@/components/Toast";
 interface DashboardShellUser {
   name: string | null;
   email: string;
-  image: string | null;
+  image?: string | null | undefined;
 }
 
 export default function DashboardShell({

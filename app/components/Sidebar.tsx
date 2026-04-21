@@ -7,7 +7,7 @@ import { signOut } from "@/lib/auth-client";
 interface SidebarUser {
   name: string | null;
   email: string;
-  image: string | null;
+  image?: string | null | undefined;
 }
 
 interface SidebarProps {
