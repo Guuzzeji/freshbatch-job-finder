@@ -1,24 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { useToast } from "./Toast";
 import ToggleSwitch from "./ToggleSwitch";
-import {
-  getStoredWebhookEndpoint,
-  isValidWebhookEndpoint,
-  WEBHOOK_STORAGE_KEY,
-} from "@/lib/webhook";
+import { saveWebhookSettingsAction } from "@/app/dashboard/actions";
+import type { WebhookRow } from "@/lib/db/webhook-types";
+import { isValidWebhookEndpoint } from "@/lib/webhook";
 
-export default function HookCard() {
+export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRow | null }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const { showToast } = useToast();
-  const [endpoint, setEndpoint] = useState(() => getStoredWebhookEndpoint());
-  const [active, setActive] = useState(true);
+  const [endpoint, setEndpoint] = useState(initialWebhook?.hook_url ?? "");
+  const [signKey, setSignKey] = useState(initialWebhook?.sign_key ?? "");
+  const [active, setActive] = useState(initialWebhook?.is_active ?? true);
+  const [isFte, setIsFte] = useState(initialWebhook?.is_fte ?? true);
+  const [isIntern, setIsIntern] = useState(initialWebhook?.is_intern ?? false);
+  const [isMarkdown, setIsMarkdown] = useState(initialWebhook?.is_markdown ?? false);
+  const [toggleResetKey, setToggleResetKey] = useState(0);
   const buttonBase =
     "whitespace-nowrap rounded-[9px] px-4 py-2 font-[var(--font-dm-mono)] text-[11px] font-medium transition active:scale-[0.97]";
   const secondaryButton =
     "border border-[color:var(--border)] bg-[color:var(--cream-dark)] text-[color:var(--brown)] hover:bg-[color:var(--border-light)]";
 
-  const saveEndpoint = () => {
+  const saveEndpoint = async () => {
     const trimmedEndpoint = endpoint.trim();
 
     if (!isValidWebhookEndpoint(trimmedEndpoint)) {
@@ -26,14 +32,34 @@ export default function HookCard() {
       return;
     }
 
-    window.localStorage.setItem(WEBHOOK_STORAGE_KEY, trimmedEndpoint);
-    setEndpoint(trimmedEndpoint);
-    showToast("endpoint saved 🍪 deliveries are pointed at your URL");
+    startTransition(() => {
+      void (async () => {
+        try {
+          const result = await saveWebhookSettingsAction({
+            hookUrl: trimmedEndpoint,
+            isFte,
+            isIntern,
+            isActive: active,
+            isMarkdown,
+          });
+          setEndpoint(trimmedEndpoint);
+          setSignKey(result.sign_key);
+          router.refresh();
+          showToast("endpoint saved 🍪 deliveries are pointed at your URL");
+        } catch {
+          showToast("couldn't save endpoint right now, try again");
+        }
+      })();
+    });
   };
 
   const clearEndpoint = () => {
-    window.localStorage.removeItem(WEBHOOK_STORAGE_KEY);
     setEndpoint("");
+    setActive(true);
+    setIsFte(true);
+    setIsIntern(false);
+    setIsMarkdown(false);
+    setToggleResetKey((value) => value + 1);
     showToast("saved endpoint cleared");
   };
 
@@ -83,6 +109,24 @@ export default function HookCard() {
           clear
         </button>
       </div>
+      {signKey && (
+        <div className="mb-4 flex items-center gap-2 rounded-[10px] border border-[color:var(--border-light)] bg-white px-3 py-2">
+          <span className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)] shrink-0">sign key</span>
+          <span className="min-w-0 flex-1 truncate font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)]">
+            {signKey}
+          </span>
+          <button
+            className="rounded-[7px] border border-[color:var(--border)] bg-transparent px-3 py-[5px] font-[var(--font-dm-mono)] text-[10px] whitespace-nowrap text-[color:var(--brown-mid)] transition hover:bg-[color:var(--cream-dark)]"
+            onClick={() => {
+              navigator.clipboard.writeText(signKey);
+              showToast("sign key copied 🍪");
+            }}
+            type="button"
+          >
+            copy
+          </button>
+        </div>
+      )}
       <div className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
         Freshbatch sends each matching job payload to the endpoint you configure here.
       </div>
@@ -98,7 +142,7 @@ export default function HookCard() {
             pause this to stop all deliveries
           </div>
         </div>
-        <ToggleSwitch defaultChecked={active} onChange={toggleActive} />
+        <ToggleSwitch key={`active-${toggleResetKey}`} defaultChecked={active} onChange={toggleActive} />
       </div>
 
       <div className="flex items-center justify-between gap-3 border-b border-dashed border-[color:var(--border-light)] py-3">
@@ -108,7 +152,11 @@ export default function HookCard() {
             summer &amp; co-op roles
           </div>
         </div>
-        <ToggleSwitch defaultChecked={true} />
+        <ToggleSwitch
+          key={`intern-${toggleResetKey}`}
+          defaultChecked={isIntern}
+          onChange={(v) => setIsIntern(v)}
+        />
       </div>
 
       <div className="flex items-center justify-between gap-3 border-b border-dashed border-[color:var(--border-light)] py-3">
@@ -118,7 +166,11 @@ export default function HookCard() {
             full-time entry level
           </div>
         </div>
-        <ToggleSwitch defaultChecked={true} />
+        <ToggleSwitch
+          key={`fte-${toggleResetKey}`}
+          defaultChecked={isFte}
+          onChange={(v) => setIsFte(v)}
+        />
       </div>
 
       <div className="flex items-center justify-between gap-3 py-3">

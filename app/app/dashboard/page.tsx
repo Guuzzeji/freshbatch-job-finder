@@ -1,7 +1,10 @@
 import StatsGrid from "@/components/StatsGrid";
 import HookCard from "@/components/HookCard";
+import { getWebhookSettingsForCurrentUser } from "@/app/dashboard/actions";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const initialWebhook = await getWebhookSettingsForCurrentUser();
+
   return (
     <>
       <div className="mb-6">
@@ -17,7 +20,7 @@ export default function DashboardPage() {
       </div>
 
       <StatsGrid />
-      <HookCard />
+      <HookCard initialWebhook={initialWebhook} />
     </>
   );
 }
