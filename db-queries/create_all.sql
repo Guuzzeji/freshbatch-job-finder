@@ -1,16 +1,14 @@
-CREATE TABLE IF NOT EXISTS users (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  github_id     BIGINT UNIQUE NOT NULL,   -- GitHub's numeric user ID
-  username      VARCHAR(255),             -- github login handle
-  email         VARCHAR(255),             -- may be null if user hides it
-  avatar_url    TEXT,
-  created_at    TIMESTAMPTZ DEFAULT now(),
-  updated_at    TIMESTAMPTZ DEFAULT now()
-);
+-- Create two dedicated databases: one for webhook data, one for GitHub auth accounts
+CREATE DATABASE webhook_db;
+CREATE DATABASE auth_db;
+
+-- Switch to the webhook DB and create the same webhook-related tables there
+\connect webhook_db
+
 
 CREATE TABLE IF NOT EXISTS webhooks (
     id          BIGSERIAL PRIMARY KEY,
-    user_id     UUID NOT NULL REFERENCES users (id),
+    user_id     TEXT NOT NULL, -- NOTE: Use better auth user.id (user table get id type of text)
     hook_url    TEXT NOT NULL,
     sign_key    TEXT NOT NULL,
     is_fte      BOOLEAN NOT NULL DEFAULT TRUE,
@@ -30,8 +28,7 @@ CREATE TABLE IF NOT EXISTS webhooks_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_webhooks_log_webhook_id ON webhooks_log (webhook_id);
-CREATE INDEX IF NOT EXISTS idx_webhooks_user_id ON webhooks (user_id);
 CREATE INDEX IF NOT EXISTS idx_webhooks_is_active ON webhooks (is_active) WHERE is_active = TRUE;
-CREATE INDEX IF NOT EXISTS idx_user_github_id ON users (github_id);
-CREATE INDEX IF NOT EXISTS idk_webhooks_is_fte ON webhooks (is_fte) WHERE is_fte = TRUE;
+CREATE INDEX IF NOT EXISTS idx_webhooks_is_fte ON webhooks (is_fte) WHERE is_fte = TRUE;
 CREATE INDEX IF NOT EXISTS idx_webhooks_is_intern ON webhooks (is_intern) WHERE is_intern = TRUE;
+

@@ -14,11 +14,10 @@ services:
     restart: always
     volumes:
       - dev-main-db:/var/lib/postgresql/data
-      - ./webhook-publisher/db-queries/dev_init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db-queries/create_all.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_PASSWORD: mySecretPassword
       POSTGRES_USER: myUser
-      POSTGRES_DB: myDb
     ports:
       - "5432:5432"
     networks:
