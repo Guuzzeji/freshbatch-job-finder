@@ -22,6 +22,7 @@ This project is a web hook job tracker designed to monitor and manage web hook e
   - `app/app/`: App routes and pages including `dashboard`, `docs`, and utility pages.
   - `components/`: Reusable React components used across the frontend (cards, sidebar, toasts, etc.).
   - `lib/`: Frontend helper libraries (webhook helpers, mock data).
+- `lib/db/`: Server-only Kysely database client/types for webhook persistence (`webhook-db.ts`, `webhook-types.ts`) using `DATABASE_WEBHOOK_URL`.
   - `public/`: Static assets served by the frontend (images, icons).
 
 - `repo-checker/`: Python service and tools for scanning repositories, parsing changes, and verifying repository health. Includes scripts, a virtual environment, Dockerfile/dev compose config, and example repositories under `repos/`.
@@ -64,6 +65,27 @@ This project is a web hook job tracker designed to monitor and manage web hook e
 - Important: do **not** duplicate Redis/Postgres services inside per-service `dev.docker-compose.yml` files; those files should only run app containers and connect to `web-hook-job-tracker-dev-shared`.
 
 Each folder is purpose-scoped: frontend UI lives in `app/`, background services and tooling live in `repo-checker/` and `webhook-publisher/`, reusable Python code lives in `shared/`, and test fixtures live in `testing/`. This separation keeps UI, workers, and libraries modular and easier to maintain.
+
+## Webhook Persistence (DB-backed, SSR + Server Actions)
+
+- **One webhook per user** — enforced by `UNIQUE (user_id)` on the `webhooks` table and a `CHECK (is_fte OR is_intern)` constraint. Never allow multiple rows per user.
+- **Two separate Postgres databases:** `auth_db` (Better Auth) and `webhook_db` (webhook data). No cross-DB foreign keys — user identity is enforced in the app layer via Better Auth session.
+- **Env vars:**
+  - `DATABASE_AUTH_URL=postgresql://myUser:mySecretPassword@localhost:5432/auth_db`
+  - `DATABASE_WEBHOOK_URL=postgresql://myUser:mySecretPassword@localhost:5432/webhook_db`
+  - `REDIS_URL=redis://localhost:6379` — used by the Next.js app (`app/lib/redis.ts`) to connect to Redis for test webhook enqueueing via `webhook:fanout:pending`. Must point to the same Redis instance used by the Python services.
+- **Kysely client:** `app/lib/db/webhook-db.ts` — singleton `Kysely<WebhookDatabase>` using `DATABASE_WEBHOOK_URL`. Import as `import { webhookDb } from "@/lib/db/webhook-db"`. Marked `server-only` — never import in client components.
+- **Types:** `app/lib/db/webhook-types.ts` — `WebhookRow`, `NewWebhookRow`, `WebhookRowUpdate`, `WebhookDatabase`.
+- **Server Actions** (`app/app/dashboard/actions.ts`):
+  - `getWebhookSettingsForCurrentUser()` — reads the authed user's webhook row (returns `WebhookRow | null`)
+  - `saveWebhookSettingsAction(input: unknown)` — validates payload, upserts row, calls `revalidatePath("/dashboard")`
+  - `getWebhookLogsForCurrentUser(onlyTests?: boolean)` — returns latest 20 `webhooks_log` rows for the user; pass `true` to filter `is_test = true` only
+  - `sendTestWebhookAction()` — enqueues a test `JobInformation` payload to `webhook:fanout:pending` via node-redis; returns `{ ok: boolean; code?: string; message?: string }`
+  - All functions call `auth.api.getSession({ headers: await headers() })` — never trust user_id from client
+- **SSR pattern:** `app/app/dashboard/page.tsx` is an `async` server component that calls `getWebhookSettingsForCurrentUser()` and passes `initialWebhook` to `<HookCard>`.
+- **Client pattern:** `HookCard.tsx` accepts `initialWebhook: WebhookRow | null`, initializes state from it, calls `saveWebhookSettingsAction` inside `startTransition`, then `router.refresh()` to re-sync server state. No `localStorage` anywhere.
+- **Schema file:** `db-queries/create_all.sql` — edit table definitions directly (no ALTER TABLE). Reboot Docker with `docker compose -f dev.dep.docker-compose.yml down -v && up -d` to apply schema changes.
+- **Validator:** `app/lib/webhook.ts` exports `isValidWebhookSettingsPayload` (used server-side) and `isValidWebhookEndpoint` (used client-side).
 
 ## Agent Note
 
