@@ -9,7 +9,7 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      POSTGRES_DSN_URL: postgresql://myUser:mySecretPassword@db:5432/myDb
+      POSTGRES_DSN_URL: postgresql://myUser:mySecretPassword@db:5432/webhook_db
     restart: always
     networks:
       - dev-shared

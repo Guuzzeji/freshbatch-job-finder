@@ -50,8 +50,11 @@ class JobInformation:
         return json.dumps(self.to_json())
     
     @staticmethod
-    def from_string(json_str: str) -> JobInformation:
-        json_obj = json.loads(json_str)
+    def from_string(json_str_or_dict: str | dict) -> JobInformation:
+        if isinstance(json_str_or_dict, dict):
+            json_obj = json_str_or_dict
+        else:
+            json_obj = json.loads(json_str_or_dict)
         return JobInformation(
             is_test=json_obj["is_test"],
             is_fte=json_obj["is_fte"],
@@ -68,8 +71,11 @@ class JobInformation:
         ) 
 
     @staticmethod
-    def from_string_list(json_str_list: str) -> list[JobInformation]:
-        json_obj = json.loads(json_str_list)
+    def from_string_list(json_str_list: str | list) -> list[JobInformation]:
+        if isinstance(json_str_list, list):
+            json_obj = json_str_list
+        else:
+            json_obj = json.loads(json_str_list)
         result = []
         for job in json_obj:
             result.append(JobInformation.from_string(job))
@@ -100,8 +106,12 @@ class HookerInformation:
     @staticmethod
     def from_string(json_str: str) -> 'HookerInformation':
         json_obj = json.loads(json_str)
+        try:
+            webhook_id = int(json_obj["webhook_id"])
+        except (KeyError, TypeError, ValueError):
+            webhook_id = -1
         return HookerInformation(
-            webhook_id=json_obj.get("webhook_id", -1),
+            webhook_id=webhook_id,
             sign_key=json_obj["sign_key"],
             hook_url=json_obj["hook_url"]
         )

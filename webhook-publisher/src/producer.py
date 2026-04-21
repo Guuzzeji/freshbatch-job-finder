@@ -38,43 +38,47 @@ def producer_handler(payload: str, redis_pool, queue_name: str):
             password=parsed_url["password"],
             dbname=parsed_url["dbname"],
         )
-        try:
-            jobs = JobInformation.from_string_list(payload)
-            if not jobs:
-                logger.warning("[Producer] Received empty job list from fanout queue — nothing to enqueue, skipping")
-                return
-            with pg_conn.cursor(name="hook_cursor") as cur:
-                cur.itersize = BATCH_SIZE
-                # NOTE: Assume that the first object is the same type as the rest
-                search_query = job_query_type(jobs[0])
-                cur.execute(search_query)
-                for row in cur:
-                    hook_metadata = HookerInformation(
-                        webhook_id=row[0],
-                        hook_url=row[1],
-                        sign_key=row[2]
-                    )
-                    job_for_worker = f"{hook_metadata.dump()}{PAYLOAD_DIVIDER}{payload}"
-                    redis_conn.lpush(queue_name, job_for_worker)
-                    logger.info(f"[Producer] Enqueued job batch for webhook subscriber: url={hook_metadata.hook_url}")
-        finally:
-            pg_conn.close()
     except Exception as e:
         logger.error(f"[Producer] Handler failed while processing fanout payload: {str(e)}", exc_info=True)
+        raise RuntimeError("Failed to connect to Redis or PostgreSQL") from e
+
+    try:
+        jobs = JobInformation.from_string_list(payload)
+        if not jobs:
+            logger.warning("[Producer] Received empty job list from fanout queue — nothing to enqueue, skipping")
+            return
+        with pg_conn.cursor(name="hook_cursor") as cur:
+            cur.itersize = BATCH_SIZE
+            # NOTE: Assume that the first object is the same type as the rest
+            search_query = job_query_type(jobs[0])
+            cur.execute(search_query)
+            for row in cur:
+                hook_metadata = HookerInformation(
+                    webhook_id=row[0],
+                    hook_url=row[1],
+                    sign_key=row[2]
+                )
+                job_for_worker = f"{hook_metadata.dump()}{PAYLOAD_DIVIDER}{payload}"
+                redis_conn.lpush(queue_name, job_for_worker)
+                logger.info(f"[Producer] Enqueued job batch for webhook subscriber: url={hook_metadata.hook_url}")
+    finally:
+        pg_conn.close()
 
 def create_producer(redis_pool, fanout_queue: str, send_queue: str):
     try:
         logger.info("[Producer] Service started — polling fanout queue for job payloads")
         redis_conn = redis.Redis(connection_pool=redis_pool)
-        while True:
-            logger.info("[Producer] Polling fanout queue for new job payloads")
-            # NOTE: We can do this because we always have a single producer
-            payload = redis_conn.lpop(fanout_queue)
-            if payload is None:
-                logger.info("[Producer] No pending payloads in fanout queue — sleeping 5s before next poll")
-                sleep(5)
-                continue
-            logger.info("[Producer] Payload found — dispatching to producer_handler for webhook fanout")
-            producer_handler(str(payload), redis_pool, send_queue)
     except Exception as e:
         logger.error(f"[Producer] Fatal error reading from fanout queue — producer loop terminated: {str(e)}", exc_info=True)
+        raise RuntimeError("Producer loop terminated due to fatal error") from e
+    
+    while True:
+        logger.info("[Producer] Polling fanout queue for new job payloads")
+        # NOTE: We can do this because we always have a single producer
+        payload = redis_conn.lpop(fanout_queue)
+        if payload is None:
+            logger.info("[Producer] No pending payloads in fanout queue — sleeping 5s before next poll")
+            sleep(5)
+            continue
+        logger.info("[Producer] Payload found — dispatching to producer_handler for webhook fanout")
+        producer_handler(str(payload), redis_pool, send_queue)

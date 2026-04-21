@@ -85,64 +85,65 @@ def create_worker(redis_pool, worker_id: int, worker_queue: str, job_queue: str)
         redis_conn = redis.Redis(connection_pool=redis_pool)
         worker_queue = f"{worker_queue}{worker_id}"
         logger.info(f"[Worker-{worker_id}] Started — listening on queue '{worker_queue}'")
+    except Exception as e:
+        logger.error(f"[Worker-{worker_id}] Failed to connect to Redis: error={str(e)}", exc_info=True)
+        raise RuntimeError("Failed to connect to Redis") from e
 
-        while True:
-            logger.info(f"[Worker-{worker_id}] Polling job queue '{job_queue}' for pending deliveries")
-            queue_pop_msg = redis_conn.lmove(job_queue, worker_queue, 'RIGHT', 'LEFT')
-            if queue_pop_msg is None:
-                logger.info(f"[Worker-{worker_id}] No pending jobs in queue — sleeping 5s before next poll")
-                sleep(5)
-                continue
+    while True:
+        logger.info(f"[Worker-{worker_id}] Polling job queue '{job_queue}' for pending deliveries")
+        queue_pop_msg = redis_conn.lmove(job_queue, worker_queue, 'RIGHT', 'LEFT')
+        if queue_pop_msg is None:
+            logger.info(f"[Worker-{worker_id}] No pending jobs in queue — sleeping 5s before next poll")
+            sleep(5)
+            continue
+        
+        logger.info(f"[Worker-{worker_id}] Job found in queue — beginning webhook delivery")
+        package = decode_package(str(queue_pop_msg))
+        signature = sign_package(package["data"], package["hook_metadata"].sign_key)
+
+        try:
+            logger.info(f"[Worker-{worker_id}] Sending {len(package['data'])} job(s) to webhook_id={package['hook_metadata'].webhook_id} at {package['hook_metadata'].hook_url}")
+            json_payload = {"data": [job.to_json() for job in package["data"]]}
+            http_call = requests.post(
+                    package["hook_metadata"].hook_url, 
+                    headers={"Content-Type": "application/json", "webhook-signature": signature}, 
+                    timeout=3,
+                    json=json_payload)
             
-            logger.info(f"[Worker-{worker_id}] Job found in queue — beginning webhook delivery")
-            package = decode_package(str(queue_pop_msg))
-            signature = sign_package(package["data"], package["hook_metadata"].sign_key)
+            is_test = any(job.is_test for job in package["data"])
+            jobs_payload_str = json.dumps(json_payload["data"])
 
-            try:
-                logger.info(f"[Worker-{worker_id}] Sending {len(package['data'])} job(s) to webhook_id={package['hook_metadata'].webhook_id} at {package['hook_metadata'].hook_url}")
-                json_payload = {"data": [job.to_json() for job in package["data"]]}
-                http_call = requests.post(
-                        package["hook_metadata"].hook_url, 
-                        headers={"Content-Type": "application/json", "webhook-signature": signature}, 
-                        timeout=3,
-                        json=json_payload)
-                
-                is_test = any(job.is_test for job in package["data"])
-                jobs_payload_str = json.dumps(json_payload["data"])
-
-                if http_call.status_code != 200:
-                    logger.warning(f"[Worker-{worker_id}] Webhook delivery failed (non-200 response): webhook_id={package['hook_metadata'].webhook_id}, status_code={http_call.status_code}, url={package['hook_metadata'].hook_url}")
-                    log_webhook_request(
-                        webhook_id=package["hook_metadata"].webhook_id,
-                        success=False,
-                        error_message=http_call.text[:1000] if http_call.text else None,
-                        status_code=http_call.status_code,
-                        jobs_payload=jobs_payload_str,
-                        is_test=is_test
-                    )
-                else:
-                    logger.info(f"[Worker-{worker_id}] Webhook delivery successful: webhook_id={package['hook_metadata'].webhook_id}, status_code={http_call.status_code}, jobs_sent={len(package['data'])}")
-                    log_webhook_request(
-                        webhook_id=package["hook_metadata"].webhook_id,
-                        success=True,
-                        error_message=None,
-                        status_code=http_call.status_code,
-                        jobs_payload=jobs_payload_str,
-                        is_test=is_test
-                    )
-            except Exception as e:
-                logger.error(f"[Worker-{worker_id}] Exception during webhook delivery: webhook_id={package['hook_metadata'].webhook_id}, url={package['hook_metadata'].hook_url}, error={str(e)}", exc_info=True)
-                is_test = any(job.is_test for job in package["data"])
-                jobs_payload_str = json.dumps([job.to_json() for job in package["data"]])
+            if http_call.status_code != 200:
+                logger.warning(f"[Worker-{worker_id}] Webhook delivery failed (non-200 response): webhook_id={package['hook_metadata'].webhook_id}, status_code={http_call.status_code}, url={package['hook_metadata'].hook_url}")
                 log_webhook_request(
                     webhook_id=package["hook_metadata"].webhook_id,
                     success=False,
-                    error_message=str(e)[:1000],
-                    status_code=None,
+                    error_message=http_call.text[:1000] if http_call.text else None,
+                    status_code=http_call.status_code,
                     jobs_payload=jobs_payload_str,
                     is_test=is_test
                 )
-            finally:
-                redis_conn.lrem(worker_queue, 1, queue_pop_msg) # pyright: ignore[reportArgumentType]
-    except Exception as e:
-        logger.error(f"[Worker-{worker_id}] Fatal error in worker loop — worker terminated: {str(e)}", exc_info=True)
+            else:
+                logger.info(f"[Worker-{worker_id}] Webhook delivery successful: webhook_id={package['hook_metadata'].webhook_id}, status_code={http_call.status_code}, jobs_sent={len(package['data'])}")
+                log_webhook_request(
+                    webhook_id=package["hook_metadata"].webhook_id,
+                    success=True,
+                    error_message=None,
+                    status_code=http_call.status_code,
+                    jobs_payload=jobs_payload_str,
+                    is_test=is_test
+                )
+        except Exception as e:
+            logger.error(f"[Worker-{worker_id}] Exception during webhook delivery: webhook_id={package['hook_metadata'].webhook_id}, url={package['hook_metadata'].hook_url}, error={str(e)}", exc_info=True)
+            is_test = any(job.is_test for job in package["data"])
+            jobs_payload_str = json.dumps([job.to_json() for job in package["data"]])
+            log_webhook_request(
+                webhook_id=package["hook_metadata"].webhook_id,
+                success=False,
+                error_message=str(e)[:1000],
+                status_code=None,
+                jobs_payload=jobs_payload_str,
+                is_test=is_test
+            )
+        finally:
+            redis_conn.lrem(worker_queue, 1, queue_pop_msg) # pyright: ignore[reportArgumentType]
