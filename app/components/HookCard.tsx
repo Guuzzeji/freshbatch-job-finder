@@ -9,7 +9,11 @@ import { saveWebhookSettingsAction } from "@/app/dashboard/actions";
 import type { WebhookRow } from "@/lib/db/webhook-types";
 import { isValidWebhookEndpoint } from "@/lib/webhook";
 
-export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRow | null }) {
+export default function HookCard({
+  initialWebhook,
+}: {
+  initialWebhook: WebhookRow | null;
+}) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const { showToast } = useToast();
@@ -18,7 +22,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
   const [active, setActive] = useState(initialWebhook?.is_active ?? true);
   const [isFte, setIsFte] = useState(initialWebhook?.is_fte ?? true);
   const [isIntern, setIsIntern] = useState(initialWebhook?.is_intern ?? false);
-  const [isMarkdown, setIsMarkdown] = useState(initialWebhook?.is_markdown ?? false);
+  const [isMarkdown, setIsMarkdown] = useState(
+    initialWebhook?.is_markdown ?? false,
+  );
   const buttonBase =
     "whitespace-nowrap rounded-[9px] px-4 py-2 font-[var(--font-dm-mono)] text-[11px] font-medium transition active:scale-[0.97]";
   const secondaryButton =
@@ -92,7 +98,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
       </div>
       {signKey && (
         <div className="mb-4 flex items-center gap-2 rounded-[10px] border border-[color:var(--border-light)] bg-white px-3 py-2">
-          <span className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)] shrink-0">sign key</span>
+          <span className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)] shrink-0">
+            sign key
+          </span>
           <span className="min-w-0 flex-1 truncate font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)]">
             {signKey}
           </span>
@@ -109,13 +117,14 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
         </div>
       )}
       <div className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
-        Freshbatch sends each matching job payload to the endpoint you configure here.
+        Freshbatch sends each matching job payload to the endpoint you configure
+        here.
       </div>
       <Link
         href="/docs"
         className="mt-2 inline-flex font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)] underline decoration-dotted underline-offset-[3px] transition hover:text-[color:var(--caramel)]"
       >
-        need setup help? open webhook docs →
+        need setup help? open webhook docs
       </Link>
 
       <div className="mt-5 mb-3 border-b border-dashed border-[color:var(--border-light)] pb-[0.4rem] font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1px] text-[color:var(--muted)]">
@@ -124,7 +133,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
 
       <div className="flex items-center justify-between gap-3 border-b border-dashed border-[color:var(--border-light)] py-3">
         <div>
-          <div className="text-[13px] font-bold text-[color:var(--brown)]">deliveries active</div>
+          <div className="text-[13px] font-bold text-[color:var(--brown)]">
+            deliveries active
+          </div>
           <div className="mt-0.5 font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
             pause this to stop all deliveries
           </div>
@@ -138,7 +149,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
 
       <div className="flex items-center justify-between gap-3 border-b border-dashed border-[color:var(--border-light)] py-3">
         <div>
-          <div className="text-[13px] font-bold text-[color:var(--brown)]">internships</div>
+          <div className="text-[13px] font-bold text-[color:var(--brown)]">
+            internships
+          </div>
           <div className="mt-0.5 font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
             summer &amp; co-op roles
           </div>
@@ -152,7 +165,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
 
       <div className="flex items-center justify-between gap-3 border-b border-dashed border-[color:var(--border-light)] py-3">
         <div>
-          <div className="text-[13px] font-bold text-[color:var(--brown)]">new grad roles</div>
+          <div className="text-[13px] font-bold text-[color:var(--brown)]">
+            new grad roles
+          </div>
           <div className="mt-0.5 font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
             full-time entry level
           </div>

@@ -104,15 +104,25 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
   - signed-out users trigger `authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })`
 - Homepage messaging now frames dashboard as the place to configure webhook delivery, reducing confusing pre-auth setup on public home.
 
-## Public Docs Signature Reference
+## Public Docs Architecture
 
-- `app/app/docs/page.tsx` includes a dedicated signature section documenting the delivery header `webhook-signature` and verification method.
-- Signature behavior documented there matches runtime code in `webhook-publisher/src/worker.py` and `testing/mock_webhook.py`:
+- Public docs are now a 12 page site under `app/app/docs/`, not a single long `/docs` page.
+- `app/app/docs/page.tsx` redirects `/docs` to `/docs/quickstart`.
+- `app/app/docs/layout.tsx` wraps every docs route with `PublicNavbar` and `DocsLayout`.
+- `app/components/DocsLayout.tsx` provides the shared docs shell, with a desktop sidebar and a mobile drawer menu.
+- `app/components/DocsNav.tsx` is the shared sidebar navigation source of truth. It uses exact pathname matching for active states, including the section overview links.
+- The docs information architecture is grouped into:
+  - Quickstart, `/docs/quickstart`
+  - Introduction, `/docs/introduction`
+  - Getting Started pages, `/docs/getting-started/dashboard`, `/docs/getting-started/test-fire`, `/docs/getting-started/delivery-log`
+  - Payload Reference, `/docs/payload-reference`
+  - Signature Verification pages, `/docs/signature-verification`, `/docs/signature-verification/python`, `/docs/signature-verification/typescript`
+  - Integrations pages, `/docs/integrations`, `/docs/integrations/fastapi`, `/docs/integrations/express`
+- Signature verification guidance now lives in the dedicated Signature Verification routes and should stay aligned with `webhook-publisher/src/worker.py` and `testing/mock_webhook.py`:
   - algorithm: HMAC-SHA256
   - input for signing: canonical JSON of `body.data`
   - canonicalization: sort jobs by `url`, sort object keys, compact JSON separators `(",", ":")`, UTF-8 bytes
-- Practical receiver snippet is included on the docs page for quick copy-and-adapt integration.
-- AI-friendly companion file lives at `app/public/llm.txt` with concise setup + signature verification instructions.
+- AI-friendly companion file lives at `app/public/llm.txt` with concise setup and signature verification instructions.
 
 ## Agent Note
 
