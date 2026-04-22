@@ -124,6 +124,14 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
   - canonicalization: sort jobs by `url`, sort object keys, compact JSON separators `(",", ":")`, UTF-8 bytes
 - AI-friendly companion file lives at `app/public/llm.txt` with concise setup and signature verification instructions.
 
+## Open Graph Metadata (Public Pages)
+
+- Root defaults for public social previews live in `app/app/layout.tsx` (`openGraph` + `twitter`).
+- Docs-specific social preview metadata lives in `app/app/docs/layout.tsx`.
+- Shared placeholder image path is `app/public/og-image.png` (expected social dimension: 1200x630).
+- To replace the placeholder, overwrite `app/public/og-image.png` with branded artwork at the same path.
+- If docs should use a different image later, add `app/public/og-docs.png` and update docs layout image refs to `/og-docs.png`.
+
 ## Agent Note
 
 - **AI Agents:** When you make changes to this repository, please update `CLAUDE.md` so models and other agents have the correct, up-to-date context for the whole project.
