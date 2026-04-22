@@ -6,9 +6,15 @@ interface StepCardProps {
   chips?: string[];
 }
 
-export default function StepCard({ icon, stepNum, title, description, chips }: StepCardProps) {
+export default function StepCard({
+  icon,
+  stepNum,
+  title,
+  description,
+  chips,
+}: StepCardProps) {
   return (
-    <div className="rounded-2xl border border-[color:var(--border-light)] bg-white p-5">
+    <div className="rounded-2xl border border-[color:var(--border-light)] bg-white p-5 md:h-60">
       <div className="mb-2.5 text-[22px]">{icon}</div>
       <div className="mb-[5px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--caramel)]">
         {stepNum}

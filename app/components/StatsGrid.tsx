@@ -1,6 +1,12 @@
-import { MOCK_STATS } from "@/lib/mock-data";
+export interface DashboardStats {
+  totalDelivered: number;
+  lastDelivery: string;
+  lastDeliveryDetail: string;
+  successRate: string;
+  successRatePeriod: string;
+}
 
-export default function StatsGrid() {
+export default function StatsGrid({ stats }: { stats: DashboardStats }) {
   return (
     <div className="mb-6 grid grid-cols-1 gap-2.5 md:grid-cols-3">
       <div className="rounded-xl border border-[color:var(--border-light)] bg-[color:var(--cream)] px-[1.15rem] py-4">
@@ -8,7 +14,7 @@ export default function StatsGrid() {
           cookies delivered
         </div>
         <div className="text-[26px] leading-none font-black tracking-[-1px] text-[color:var(--caramel)]">
-          {MOCK_STATS.totalDelivered}
+          {stats.totalDelivered}
         </div>
         <div className="mt-[3px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
           all time
@@ -19,10 +25,10 @@ export default function StatsGrid() {
           last delivery
         </div>
         <div className="pt-1 text-[18px] leading-none font-black tracking-[-1px] text-[color:var(--caramel)]">
-          {MOCK_STATS.lastDelivery}
+          {stats.lastDelivery}
         </div>
         <div className="mt-[3px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
-          {MOCK_STATS.lastDeliveryDetail}
+          {stats.lastDeliveryDetail}
         </div>
       </div>
       <div className="rounded-xl border border-[color:var(--border-light)] bg-[color:var(--cream)] px-[1.15rem] py-4">
@@ -30,10 +36,10 @@ export default function StatsGrid() {
           success rate
         </div>
         <div className="text-[26px] leading-none font-black tracking-[-1px] text-[color:var(--caramel)]">
-          {MOCK_STATS.successRate}
+          {stats.successRate}
         </div>
         <div className="mt-[3px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
-          {MOCK_STATS.successRatePeriod}
+          {stats.successRatePeriod}
         </div>
       </div>
     </div>

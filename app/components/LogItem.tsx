@@ -45,10 +45,13 @@ export default function LogItem({
 }) {
   const isOk = entry.success;
   const job = parseFirstJob(entry.jobs_payload);
-  const title = job ? `${job.company_name} — ${job.title}` : "Test Delivery";
+  const title = job ? `${job.company_name} — ${job.title}` : entry.is_test ? "Test Delivery" : "Live Delivery";
   const statusCode = entry.status_code?.toString() ?? "timeout";
-  const label = entry.is_test ? "test" : "live";
+  const modeLabel = entry.is_test ? "TEST" : "LIVE";
   const relTime = formatRelativeTime(new Date(entry.created_at));
+  const modeClass = entry.is_test
+    ? "border-[color:var(--green)] bg-[color:var(--cream)] text-[color:var(--green)]"
+    : "border-[color:var(--border)] bg-[color:var(--cream-dark)] text-[color:var(--brown-mid)]";
 
   return (
     <div className="flex items-center gap-3 rounded-[10px] border border-[color:var(--border-light)] bg-[color:var(--cream)] px-[14px] py-[10px] max-sm:flex-wrap max-sm:gap-2">
@@ -56,15 +59,20 @@ export default function LogItem({
         className={`h-[7px] w-[7px] shrink-0 rounded-full ${isOk ? "bg-[color:var(--green)]" : "bg-[color:var(--caramel)]"}`}
       />
       <div className="min-w-0 flex-1">
-        <div className="text-[13px] leading-[1.2] font-bold text-[color:var(--brown)]">
-          {title}
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 truncate text-[13px] leading-[1.2] font-bold text-[color:var(--brown)]">{title}</div>
+          <div
+            className={`shrink-0 rounded-full border px-[7px] py-[2px] font-[var(--font-dm-mono)] text-[9px] tracking-[0.4px] ${modeClass}`}
+          >
+            {modeLabel}
+          </div>
         </div>
         <div className="mt-px font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
-          {relTime} · {statusCode} · {label}
+          {relTime} · status {statusCode}
         </div>
       </div>
       <div
-        className={`shrink-0 rounded-full border px-2 py-[2px] font-[var(--font-dm-mono)] text-[10px] ${isOk ? "border-[#52B788] bg-[#E8F5EF] text-[color:var(--green)]" : "border-[color:var(--caramel-light)] bg-[#FEF3E2] text-[#8B4513]"}`}
+        className={`shrink-0 rounded-full border px-2 py-[2px] font-[var(--font-dm-mono)] text-[10px] ${isOk ? "border-[color:var(--green)] bg-[color:var(--cream)] text-[color:var(--green)]" : "border-[color:var(--caramel-light)] bg-[color:var(--cream-dark)] text-[color:var(--brown-mid)]"}`}
       >
         {statusCode}
       </div>

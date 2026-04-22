@@ -6,16 +6,26 @@ export default async function DeliveryLogPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <div className="mb-1 font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1.5px] text-[color:var(--caramel)]">
-          delivery log
+      <div className="mb-6 flex items-end justify-between gap-3 max-sm:flex-col max-sm:items-start">
+        <div>
+          <div className="mb-1 font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1.5px] text-[color:var(--caramel)]">
+            delivery log
+          </div>
+          <div className="text-[26px] font-black tracking-[-1px] text-[color:var(--brown)]">
+            recent deliveries
+          </div>
+          <div className="mt-0.5 text-[13px] italic text-[color:var(--brown-mid)]">
+            every cookie we&apos;ve baked and sent your way.
+          </div>
         </div>
-        <div className="text-[26px] font-black tracking-[-1px] text-[color:var(--brown)]">
-          recent deliveries
-        </div>
-        <div className="mt-0.5 text-[13px] italic text-[color:var(--brown-mid)]">
-          every cookie we&apos;ve baked and sent your way.
-        </div>
+        <form action="/dashboard/log" method="get">
+          <button
+            type="submit"
+            className="rounded-[9px] border border-[color:var(--border)] bg-[color:var(--cream-dark)] px-4 py-2 font-[var(--font-dm-mono)] text-[11px] font-medium text-[color:var(--brown)] transition hover:bg-[color:var(--border-light)] active:scale-[0.97]"
+          >
+            ↻ refresh log
+          </button>
+        </form>
       </div>
 
       <div className="mt-4 flex flex-col gap-1.5">
@@ -24,7 +34,7 @@ export default async function DeliveryLogPage() {
             no deliveries yet
           </div>
         ) : (
-          logs.map((entry, i) => <LogItem key={i} entry={entry} />)
+          logs.map((entry, i) => <LogItem key={`${entry.webhook_id}-${entry.created_at.toString()}-${i}`} entry={entry} />)
         )}
       </div>
     </>

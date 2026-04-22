@@ -6,9 +6,15 @@ interface ToggleSwitchProps {
   defaultChecked?: boolean;
   onChange?: (checked: boolean) => void;
   id?: string;
+  ariaLabel?: string;
 }
 
-export default function ToggleSwitch({ defaultChecked = false, onChange, id }: ToggleSwitchProps) {
+export default function ToggleSwitch({
+  defaultChecked = false,
+  onChange,
+  id,
+  ariaLabel,
+}: ToggleSwitchProps) {
   const [checked, setChecked] = useState(defaultChecked);
 
   const handleChange = () => {
@@ -26,10 +32,11 @@ export default function ToggleSwitch({ defaultChecked = false, onChange, id }: T
         type="checkbox"
         checked={checked}
         onChange={handleChange}
-        className="absolute h-0 w-0 opacity-0"
+        aria-label={ariaLabel}
+        className="peer absolute h-0 w-0 opacity-0"
       />
       <div
-        className={`absolute inset-0 rounded-full transition-colors duration-200 ${checked ? "bg-[color:var(--caramel)]" : "bg-[color:var(--border-light)]"}`}
+        className={`absolute inset-0 rounded-full transition-colors duration-200 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[color:var(--caramel)] ${checked ? "bg-[color:var(--caramel)]" : "bg-[color:var(--border-light)]"}`}
       />
       <div
         className={`absolute top-[3px] left-[3px] h-4 w-4 rounded-full bg-white transition-transform duration-200 ${checked ? "translate-x-4" : "translate-x-0"}`}

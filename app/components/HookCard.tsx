@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useToast } from "./Toast";
@@ -18,7 +19,6 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
   const [isFte, setIsFte] = useState(initialWebhook?.is_fte ?? true);
   const [isIntern, setIsIntern] = useState(initialWebhook?.is_intern ?? false);
   const [isMarkdown, setIsMarkdown] = useState(initialWebhook?.is_markdown ?? false);
-  const [toggleResetKey, setToggleResetKey] = useState(0);
   const buttonBase =
     "whitespace-nowrap rounded-[9px] px-4 py-2 font-[var(--font-dm-mono)] text-[11px] font-medium transition active:scale-[0.97]";
   const secondaryButton =
@@ -53,16 +53,6 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
     });
   };
 
-  const clearEndpoint = () => {
-    setEndpoint("");
-    setActive(true);
-    setIsFte(true);
-    setIsIntern(false);
-    setIsMarkdown(false);
-    setToggleResetKey((value) => value + 1);
-    showToast("saved endpoint cleared");
-  };
-
   const toggleActive = (checked: boolean) => {
     setActive(checked);
     showToast(checked ? "deliveries reactivated 🍪" : "deliveries paused");
@@ -88,7 +78,7 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
         </div>
       </div>
 
-      <div className="mb-4 flex items-center gap-2 rounded-[10px] border border-[color:var(--border-light)] bg-white px-3 py-2 max-sm:flex-col">
+      <div className="mb-2 flex items-center gap-2 rounded-[10px] border border-[color:var(--border-light)] bg-white px-3 py-2 max-sm:flex-col">
         <input
           className="min-w-0 flex-1 bg-transparent font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] outline-none placeholder:text-[color:var(--muted)] max-sm:w-full"
           value={endpoint}
@@ -96,18 +86,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
           placeholder="https://your-app.com/webhooks/jobs"
           aria-label="Delivery endpoint"
         />
-        <button
-          className="rounded-[7px] border border-[color:var(--border)] bg-transparent px-3 py-[5px] font-[var(--font-dm-mono)] text-[10px] whitespace-nowrap text-[color:var(--brown-mid)] transition hover:bg-[color:var(--cream-dark)] max-sm:w-full"
-          onClick={saveEndpoint}
-        >
-          save
-        </button>
-        <button
-          className="rounded-[7px] border border-[color:var(--border)] bg-transparent px-3 py-[5px] font-[var(--font-dm-mono)] text-[10px] whitespace-nowrap text-[color:var(--brown-mid)] transition hover:bg-[color:var(--cream-dark)] max-sm:w-full"
-          onClick={clearEndpoint}
-        >
-          clear
-        </button>
+      </div>
+      <div className="mb-4 font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
+        Update settings below, then use one save action to persist.
       </div>
       {signKey && (
         <div className="mb-4 flex items-center gap-2 rounded-[10px] border border-[color:var(--border-light)] bg-white px-3 py-2">
@@ -130,6 +111,12 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
       <div className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
         Freshbatch sends each matching job payload to the endpoint you configure here.
       </div>
+      <Link
+        href="/docs"
+        className="mt-2 inline-flex font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)] underline decoration-dotted underline-offset-[3px] transition hover:text-[color:var(--caramel)]"
+      >
+        need setup help? open webhook docs →
+      </Link>
 
       <div className="mt-5 mb-3 border-b border-dashed border-[color:var(--border-light)] pb-[0.4rem] font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1px] text-[color:var(--muted)]">
         delivery settings
@@ -142,7 +129,11 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
             pause this to stop all deliveries
           </div>
         </div>
-        <ToggleSwitch key={`active-${toggleResetKey}`} defaultChecked={active} onChange={toggleActive} />
+        <ToggleSwitch
+          defaultChecked={active}
+          onChange={toggleActive}
+          ariaLabel="Toggle deliveries active"
+        />
       </div>
 
       <div className="flex items-center justify-between gap-3 border-b border-dashed border-[color:var(--border-light)] py-3">
@@ -153,9 +144,9 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
           </div>
         </div>
         <ToggleSwitch
-          key={`intern-${toggleResetKey}`}
           defaultChecked={isIntern}
           onChange={(v) => setIsIntern(v)}
+          ariaLabel="Toggle internships"
         />
       </div>
 
@@ -167,20 +158,10 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
           </div>
         </div>
         <ToggleSwitch
-          key={`fte-${toggleResetKey}`}
           defaultChecked={isFte}
           onChange={(v) => setIsFte(v)}
+          ariaLabel="Toggle new grad roles"
         />
-      </div>
-
-      <div className="flex items-center justify-between gap-3 py-3">
-        <div>
-          <div className="text-[13px] font-bold text-[color:var(--brown)]">remote only</div>
-          <div className="mt-0.5 font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
-            filter out on-site listings
-          </div>
-        </div>
-        <ToggleSwitch defaultChecked={false} />
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2 max-sm:flex-col">
@@ -194,7 +175,7 @@ export default function HookCard({ initialWebhook }: { initialWebhook: WebhookRo
           className={`${buttonBase} ${secondaryButton} max-sm:w-full`}
           onClick={saveEndpoint}
         >
-          💾 save endpoint
+          💾 save settings
         </button>
       </div>
     </div>

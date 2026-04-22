@@ -315,24 +315,24 @@ export default function CookieBackground() {
 
         <g style={{ transform: layerTransforms[0]?.transform }}>
           <g className="cookie-layer cookie-layer-back">
-            {cookieLayers[0].cookies.map((cookie) => (
-              <Cookie {...cookie} />
+            {cookieLayers[0].cookies.map(({ key, ...cookie }) => (
+              <Cookie key={key} {...cookie} />
             ))}
           </g>
         </g>
 
         <g style={{ transform: layerTransforms[1]?.transform }}>
           <g className="cookie-layer cookie-layer-mid">
-            {cookieLayers[1].cookies.map((cookie) => (
-              <Cookie {...cookie} />
+            {cookieLayers[1].cookies.map(({ key, ...cookie }) => (
+              <Cookie key={key} {...cookie} />
             ))}
           </g>
         </g>
 
         <g style={{ transform: layerTransforms[2]?.transform }}>
           <g className="cookie-layer cookie-layer-front">
-            {cookieLayers[2].cookies.map((cookie) => (
-              <Cookie {...cookie} />
+            {cookieLayers[2].cookies.map(({ key, ...cookie }) => (
+              <Cookie key={key} {...cookie} />
             ))}
           </g>
         </g>

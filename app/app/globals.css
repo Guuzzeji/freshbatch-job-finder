@@ -13,6 +13,13 @@
   --border-light: #e8d0b0;
   --muted: #b8977a;
   --white: #ffffff;
+  --motion-duration-xs: 120ms;
+  --motion-duration-sm: 180ms;
+  --motion-duration-md: 260ms;
+  --motion-duration-lg: 360ms;
+  --motion-distance-sm: 4px;
+  --motion-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -113,6 +120,40 @@ body {
   }
 }
 
+.motion-transition-subtle {
+  transition-property: transform, opacity;
+  transition-duration: var(--motion-duration-sm);
+  transition-timing-function: var(--motion-ease-standard);
+}
+
+.motion-hover-lift {
+  transform: translateY(0);
+}
+
+.motion-hover-lift:hover {
+  transform: translateY(calc(var(--motion-distance-sm) * -0.25));
+}
+
+.motion-enter-pop {
+  animation: popin var(--motion-duration-md) var(--motion-ease-entrance) both;
+}
+
+.motion-enter-fade {
+  animation: fadein var(--motion-duration-md) var(--motion-ease-standard) both;
+}
+
+.motion-enter-rise {
+  animation: statRise var(--motion-duration-md) var(--motion-ease-entrance) both;
+}
+
+.motion-pulse-soft {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.motion-ticker {
+  animation: tick 28s linear infinite;
+}
+
 .cookie-canvas {
   overflow: visible;
 }
@@ -137,8 +178,22 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cookie-layer {
-    transition: none;
+  .cookie-layer,
+  .motion-enter-pop,
+  .motion-enter-fade,
+  .motion-enter-rise,
+  .motion-pulse-soft,
+  .motion-ticker {
     animation: none;
+  }
+
+  .cookie-layer,
+  .motion-transition-subtle,
+  .motion-hover-lift {
+    transition: none;
+  }
+
+  .motion-hover-lift:hover {
+    transform: none;
   }
 }

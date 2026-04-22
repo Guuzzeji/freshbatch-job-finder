@@ -6,12 +6,8 @@ import Ticker from "@/components/Ticker";
 import CookieBackground from "@/components/CookieBackground";
 import JobCard from "@/components/JobCard";
 import StepCard from "@/components/StepCard";
+import PublicNavbar from "@/components/PublicNavbar";
 import { MOCK_JOB_POOL, type Job } from "@/lib/mock-data";
-import {
-  getStoredWebhookEndpoint,
-  isValidWebhookEndpoint,
-  WEBHOOK_STORAGE_KEY,
-} from "@/lib/webhook";
 import { authClient } from "@/lib/auth-client";
 
 const HERO_STATS = [
@@ -57,46 +53,23 @@ function formatStatValue(
   return `${options.prefix}${formatted}${options.suffix}`;
 }
 
-function pickRandomJobs(count: number) {
-  const shuffled = [...MOCK_JOB_POOL];
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-  }
-
-  return shuffled.slice(0, count).map((job, index) => ({
-    id: `${job.co}-${job.role}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+function getInitialJobs(count: number) {
+  return MOCK_JOB_POOL.slice(0, count).map((job, index) => ({
+    id: `${job.co}-${job.role}-${index}`,
     job,
   }));
 }
 
 export default function LandingPage() {
-  const [savedEndpoint] = useState(() => getStoredWebhookEndpoint());
-  const [navOpen, setNavOpen] = useState(false);
-  const [hookUrl, setHookUrl] = useState(savedEndpoint);
-  const [hookHint, setHookHint] = useState(
-    savedEndpoint
-      ? "saved endpoint loaded from your last visit"
-      : "paste the endpoint your agent, bot, or automation already listens on",
-  );
-  const [bakeText, setBakeText] = useState(
-    savedEndpoint ? "saved ✓" : "bake 🧑‍🍳",
-  );
-  const [bakeColor, setBakeColor] = useState<string | undefined>(
-    savedEndpoint ? "var(--green)" : undefined,
-  );
   const [displayedStats, setDisplayedStats] = useState(() =>
     HERO_STATS.map((stat) => formatStatValue(0, stat)),
   );
-  const [jobCards, setJobCards] = useState<Array<{ id: string; job: Job }>>(() =>
-    pickRandomJobs(6),
+  const [jobCards, setJobCards] = useState<Array<{ id: string; job: Job }>>(
+    () => getInitialJobs(6),
   );
   const { data: session } = authClient.useSession();
-  const navLinkClass =
-    "rounded-full border border-[color:var(--border)] bg-transparent px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] transition hover:bg-[color:var(--cream-dark)]";
   const statClass =
-    "animate-[statRise_0.8s_ease_both] flex min-w-[120px] flex-col items-center gap-1 rounded-2xl border border-[color:var(--border-light)] bg-white/80 px-4 py-3 backdrop-blur-sm";
+    "motion-enter-rise motion-hover-lift motion-transition-subtle flex min-w-[120px] flex-col items-center gap-1 rounded-2xl border border-[color:var(--border-light)] bg-white/80 px-4 py-3 backdrop-blur-sm";
 
   useEffect(() => {
     let frameId = 0;
@@ -143,152 +116,81 @@ export default function LandingPage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const saveHook = () => {
-    const trimmedUrl = hookUrl.trim();
-
-    if (!isValidWebhookEndpoint(trimmedUrl)) {
-      setHookHint("enter a valid http:// or https:// webhook endpoint");
-      setBakeText("try again");
-      setBakeColor(undefined);
-      return;
-    }
-
-    window.localStorage.setItem(WEBHOOK_STORAGE_KEY, trimmedUrl);
-    setHookUrl(trimmedUrl);
-    setHookHint("endpoint saved. freshbatch will deliver jobs to your URL.");
-    setBakeText("saved ✓");
-    setBakeColor("var(--green)");
-  };
+  const onboardingCta = session ? (
+    <Link
+      href="/dashboard"
+      className="motion-enter-fade motion-hover-lift motion-transition-subtle inline-flex items-center justify-center rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white no-underline hover:bg-[color:var(--brown-mid)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--caramel)]"
+    >
+      open dashboard
+    </Link>
+  ) : (
+    <button
+      onClick={() =>
+        authClient.signIn.social({
+          provider: "github",
+          callbackURL: "/dashboard",
+        })
+      }
+      className="motion-enter-fade motion-hover-lift motion-transition-subtle inline-flex items-center justify-center rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white hover:bg-[color:var(--brown-mid)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--caramel)]"
+    >
+      Sign In with GitHub
+    </button>
+  );
 
   return (
     <div className="overflow-x-hidden bg-[color:var(--cream)] text-[color:var(--brown)]">
-      <nav className="relative z-10 flex items-center justify-between border-b border-dashed border-[color:var(--border)] bg-[rgba(253,246,236,0.92)] px-6 py-4 backdrop-blur-[4px]">
-        <div>
-          <div className="text-[22px] font-black tracking-[-1px] text-[color:var(--brown)]">
-            fresh<span className="text-[color:var(--caramel)]">batch</span>
-          </div>
-          <div className="font-[var(--font-dm-mono)] text-[9px] uppercase tracking-[1px] text-[color:var(--caramel)]">
-            cs jobs, warm &amp; ready
-          </div>
-        </div>
-        <button
-          className="flex rounded-lg border border-[color:var(--border)] px-[10px] py-[6px] text-lg text-[color:var(--brown)] sm:hidden"
-          onClick={() => setNavOpen(!navOpen)}
-          aria-label="Toggle navigation"
-        >
-          {navOpen ? "✕" : "☰"}
-        </button>
-        <div className="hidden items-center gap-[6px] sm:flex">
-          <Link href="/docs" className={navLinkClass}>
-            docs
-          </Link>
-          <div className={navLinkClass}>twitter/x</div>
-          {session ? (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-white no-underline transition hover:bg-[color:var(--brown-mid)]"
-            >
-              {session.user.image ? (
-                <img
-                  src={session.user.image}
-                  alt={session.user.name ?? "avatar"}
-                  className="h-5 w-5 rounded-full object-cover"
-                />
-              ) : (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/30 text-[10px] font-bold">
-                  {(session.user.name ?? "?")[0].toUpperCase()}
-                </span>
-              )}
-              dashboard →
-            </Link>
-          ) : (
-            <button
-              onClick={() =>
-                authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
-              }
-              className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-white transition hover:bg-[color:var(--brown-mid)]"
-            >
-              Sign In with GitHub
-            </button>
-          )}
-        </div>
-      </nav>
-      {navOpen && (
-        <div className="z-20 flex flex-col gap-2 border-b border-dashed border-[color:var(--border)] bg-[color:var(--cream)] px-6 py-4 sm:hidden">
-          <Link href="/docs" className={navLinkClass}>
-            docs
-          </Link>
-          <div className={navLinkClass}>twitter/x</div>
-          {session ? (
-            <Link
-              href="/dashboard"
-              className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] text-center font-[var(--font-dm-mono)] text-[11px] text-white no-underline transition hover:bg-[color:var(--brown-mid)]"
-            >
-              dashboard →
-            </Link>
-          ) : (
-            <button
-              onClick={() =>
-                authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
-              }
-              className="w-full rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-[14px] py-[5px] text-center font-[var(--font-dm-mono)] text-[11px] text-white transition hover:bg-[color:var(--brown-mid)]"
-            >
-              Sign In with GitHub
-            </button>
-          )}
-        </div>
-      )}
+      <PublicNavbar variant="home" />
 
       <Ticker />
 
       <div className="relative min-h-[81vh] overflow-hidden max-sm:min-h-[480px]">
         <CookieBackground />
         <div className="relative z-[2] mx-auto max-w-[820px] px-6 pt-12 pb-10 text-center max-sm:px-5 max-sm:pt-8 max-sm:pb-8">
-          <div className="mb-6 inline-flex items-center gap-[6px] rounded-full border border-[color:var(--border)] bg-white/85 px-[14px] py-1 font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)]">
-            <div className="h-[7px] w-[7px] rounded-full bg-[color:var(--caramel)] animate-[pulse_1.4s_infinite]" />
+          <div
+            className="motion-enter-fade mb-6 inline-flex items-center gap-[6px] rounded-full border border-[color:var(--border)] bg-white/85 px-[14px] py-1 font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)]"
+            style={{ animationDelay: "40ms" }}
+          >
+            <div className="motion-pulse-soft h-[7px] w-[7px] rounded-full bg-[color:var(--caramel)]" />
             oven preheated · jobs baking now
           </div>
-          <h1 className="mb-4 text-[clamp(2.2rem,6vw,4.4rem)] leading-none font-black tracking-[-2px] text-[color:var(--brown)]">
-            fresh CS jobs,
+          <h1
+            className="motion-enter-pop mb-4 text-[clamp(2.2rem,6vw,4.4rem)] leading-none font-black tracking-[-2px] text-[color:var(--brown)]"
+            style={{ animationDelay: "80ms" }}
+          >
+            stop refreshing job boards,
             <br />
             <em className="italic text-[color:var(--caramel)]">
-              hot out the oven
+              let jobs come to you
             </em>
           </h1>
-          <p className="mx-auto mb-8 max-w-[480px] text-[15px] leading-[1.6] italic text-[color:var(--brown-mid)] max-sm:text-sm">
-            Send fresh CS jobs to the webhook endpoint you already use for your
-            AI agent, Discord bot, or cursed 2am automation.
+          <p
+            className="motion-enter-fade mx-auto mb-8 max-w-[480px] text-[15px] leading-[1.6] italic text-[color:var(--brown-mid)] max-sm:text-sm"
+            style={{ animationDelay: "120ms" }}
+          >
+            freshbatch tracks new grad + internship openings in real time and
+            routes them to your workflow after you sign in. no copy-paste setup
+            on the homepage, no guessing where to start.
           </p>
 
-          <div className="mx-auto max-w-[560px]">
-            <div className="mb-1.5 text-left font-[var(--font-dm-mono)] text-[13px] tracking-[0.5px] text-[color:var(--caramel)]">
-              {"// paste your webhook endpoint"}
+          <div
+            className="motion-enter-fade mx-auto mb-6 flex max-w-[560px] flex-col items-center gap-3 rounded-[14px] border-2 border-[color:var(--border)] bg-white/95 px-4 py-4 shadow-[4px_4px_0_var(--caramel)]"
+            style={{ animationDelay: "160ms" }}
+          >
+            <div className="font-[var(--font-dm-mono)] text-[12px] tracking-[0.5px] text-[color:var(--caramel)]">
+              {"// onboarding in under a minute"}
             </div>
-            <div className="flex items-center gap-2 rounded-[14px] border-2 border-[color:var(--border)] bg-white/95 px-4 py-[10px] shadow-[4px_4px_0_#C8720A] max-sm:flex-col max-sm:gap-2.5 max-sm:p-3">
-              <input
-                className="min-w-0 flex-1 bg-transparent font-[var(--font-dm-mono)] text-sm text-[color:var(--brown-mid)] outline-none placeholder:text-[color:var(--muted)] max-sm:w-full"
-                value={hookUrl}
-                onChange={(event) => {
-                  setHookUrl(event.target.value);
-                  setHookHint(
-                    "paste the endpoint your agent, bot, or automation already listens on",
-                  );
-                  setBakeText("bake 🧑‍🍳");
-                  setBakeColor(undefined);
-                }}
-                placeholder="https://hooks.slack.com/services/..."
-                aria-label="Webhook endpoint"
-              />
-              <button
-                className={`shrink-0 whitespace-nowrap rounded-[10px] px-4 py-2 font-[var(--font-dm-mono)] text-[13px] font-medium text-white transition hover:bg-[color:var(--brown-mid)] max-sm:w-full ${bakeColor ? "bg-[color:var(--green)]" : "bg-[color:var(--caramel)]"}`}
-                onClick={saveHook}
-              >
-                {bakeText}
-              </button>
+            <div className="flex flex-wrap items-center justify-center gap-[6px]">
+              <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--cream-dark)] px-[10px] py-[4px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)]">
+                github sign-in
+              </span>
+              <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--cream-dark)] px-[10px] py-[4px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)]">
+                tune filters
+              </span>
+              <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--cream-dark)] px-[10px] py-[4px] font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)]">
+                connect webhook once
+              </span>
             </div>
-            <div className="mt-2 text-center font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
-              {hookHint}
-            </div>
+            {onboardingCta}
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -315,7 +217,7 @@ export default function LandingPage() {
       <div className="mx-auto max-w-[1140px] px-6 py-6 max-sm:px-5">
         <div className="mb-1 flex items-center gap-2 font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1.5px] text-[color:var(--caramel)]">
           <span>🔥 latest batch</span>
-          <span className="rounded-full border border-[color:var(--border)] bg-white/80 px-2 py-[2px] text-[9px] tracking-[1.2px] text-[color:var(--brown-mid)] animate-[pulse_1.8s_infinite]">
+          <span className="motion-pulse-soft rounded-full border border-[color:var(--border)] bg-white/80 px-2 py-[2px] text-[9px] tracking-[1.2px] text-[color:var(--brown-mid)]">
             live mock feed
           </span>
         </div>
@@ -323,8 +225,14 @@ export default function LandingPage() {
           fresh out the oven
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {jobCards.map(({ id, job }) => (
-            <JobCard key={id} job={job} />
+          {jobCards.map(({ id, job }, index) => (
+            <div
+              key={id}
+              className="motion-enter-fade"
+              style={{ animationDelay: `${250}ms` }}
+            >
+              <JobCard job={job} />
+            </div>
           ))}
         </div>
       </div>
@@ -337,31 +245,51 @@ export default function LandingPage() {
           stupid simple. painfully good.
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <StepCard
-            icon="🧑‍🍳"
-            stepNum="step 01"
-            title="paste your endpoint"
-            description="bring the webhook URL you already trust. no generated hook required."
-          />
-          <StepCard
-            icon="🎚️"
-            stepNum="step 02"
-            title="season to taste"
-            description="new grad, internship, co-op. class year. remote. faang or startup. your call."
-          />
-          <StepCard
-            icon="🤖"
-            stepNum="step 03"
-            title="plug into anything"
-            description="discord bot, n8n, claude agent, python. we send JSON, you do the magic."
-            chips={["discord", "n8n", "make", "claude"]}
-          />
-          <StepCard
-            icon="😴"
-            stepNum="the result"
-            title="go touch grass"
-            description="the webhook finds jobs while you sleep, go to class, or doom-scroll something else."
-          />
+          <div
+            className="motion-enter-fade motion-hover-lift motion-transition-subtle"
+            style={{ animationDelay: "80ms" }}
+          >
+            <StepCard
+              icon="🧑‍🍳"
+              stepNum="step 01"
+              title="sign in + open dashboard"
+              description="start with github auth, then configure everything from one clear home base."
+            />
+          </div>
+          <div
+            className="motion-enter-fade motion-hover-lift motion-transition-subtle"
+            style={{ animationDelay: "140ms" }}
+          >
+            <StepCard
+              icon="🧂"
+              stepNum="step 02"
+              title="season to taste"
+              description="new grad, internship, co-op. class year. remote. faang or startup. your call."
+            />
+          </div>
+          <div
+            className="motion-enter-fade motion-hover-lift motion-transition-subtle"
+            style={{ animationDelay: "200ms" }}
+          >
+            <StepCard
+              icon="🤖"
+              stepNum="step 03"
+              title="plug into anything"
+              description="discord bot, n8n, claude agent, python. we send JSON, you do the magic."
+              chips={["discord", "n8n", "make", "claude"]}
+            />
+          </div>
+          <div
+            className="motion-enter-fade motion-hover-lift motion-transition-subtle"
+            style={{ animationDelay: "260ms" }}
+          >
+            <StepCard
+              icon="😴"
+              stepNum="the result"
+              title="go touch grass"
+              description="the webhook finds jobs while you sleep, go to class, or doom-scroll something else."
+            />
+          </div>
         </div>
       </div>
 
@@ -370,25 +298,16 @@ export default function LandingPage() {
           your batch is ready. 🍪
         </h2>
         <p className="mx-auto mb-5 max-w-[520px] text-[15px] leading-[1.6] text-[color:var(--brown-mid)]">
-          stop refreshing linkedin. point freshbatch at your own endpoint and
-          let the jobs come to you.
+          freshbatch keeps your job feed warm while you do literally anything
+          else. onboarding starts in the dashboard.
         </p>
-        {session ? (
-          <Link href="/dashboard">
-            <button className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white transition hover:bg-[color:var(--brown-mid)]">
-              configure my endpoint →
-            </button>
-          </Link>
-        ) : (
-          <button
-            onClick={() =>
-              authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })
-            }
-            className="rounded-full border border-[color:var(--caramel)] bg-[color:var(--caramel)] px-6 py-3 font-[var(--font-dm-mono)] text-xs tracking-[0.3px] text-white transition hover:bg-[color:var(--brown-mid)]"
-          >
-            Sign In with GitHub →
-          </button>
-        )}
+        <Link
+          href="/docs"
+          className="motion-enter-fade motion-hover-lift motion-transition-subtle inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-white/85 px-5 py-2 font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] no-underline hover:bg-[color:var(--cream-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--caramel)]"
+          style={{ animationDelay: "120ms" }}
+        >
+          read the docs first
+        </Link>
       </div>
     </div>
   );

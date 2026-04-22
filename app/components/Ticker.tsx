@@ -3,7 +3,7 @@ export default function Ticker() {
 
   return (
     <div className="relative z-[5] overflow-hidden whitespace-nowrap bg-[color:var(--chip)] py-[7px] font-[var(--font-dm-mono)] text-[11px] text-[color:var(--caramel-light)]">
-      <span className="inline-block animate-[tick_28s_linear_infinite]">
+      <span className="motion-ticker inline-block">
         {text}{text}
       </span>
     </div>

@@ -84,8 +84,35 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
   - All functions call `auth.api.getSession({ headers: await headers() })` — never trust user_id from client
 - **SSR pattern:** `app/app/dashboard/page.tsx` is an `async` server component that calls `getWebhookSettingsForCurrentUser()` and passes `initialWebhook` to `<HookCard>`.
 - **Client pattern:** `HookCard.tsx` accepts `initialWebhook: WebhookRow | null`, initializes state from it, calls `saveWebhookSettingsAction` inside `startTransition`, then `router.refresh()` to re-sync server state. No `localStorage` anywhere.
+- **Dashboard settings MVP scope:** `HookCard.tsx` exposes only MVP-enabled toggles (`deliveries active`, `internships`, `new grad roles`), removes unsupported `remote only`, keeps a single explicit `save settings` persistence action, keeps `test fire webhook` as separate navigation, and links to `/docs` for setup guidance.
 - **Schema file:** `db-queries/create_all.sql` — edit table definitions directly (no ALTER TABLE). Reboot Docker with `docker compose -f dev.dep.docker-compose.yml down -v && up -d` to apply schema changes.
 - **Validator:** `app/lib/webhook.ts` exports `isValidWebhookSettingsPayload` (used server-side) and `isValidWebhookEndpoint` (used client-side).
+
+## Frontend Motion Guardrails (Public UI)
+
+- Global subtle motion tokens/utilities live in `app/app/globals.css`:
+  - duration/easing tokens: `--motion-duration-{xs,sm,md,lg}`, `--motion-ease-standard`, `--motion-ease-entrance`
+  - utility classes: `.motion-transition-subtle`, `.motion-hover-lift`, `.motion-enter-pop`, `.motion-enter-fade`, `.motion-enter-rise`, `.motion-pulse-soft`, `.motion-ticker`
+- Reduced-motion behavior (`@media (prefers-reduced-motion: reduce)`) now disables non-essential motion utilities while preserving existing cookie background guardrails (`.cookie-layer` transition/animation off).
+- Public pages/components should prefer these motion utility classes over ad-hoc `animate-[...]`/`transition` strings when adding subtle micro-interactions.
+
+## Home Page Onboarding Flow (Public)
+
+- `app/app/page.tsx` no longer exposes editable webhook endpoint input or any homepage `localStorage` endpoint persistence flow.
+- Hero onboarding uses a single auth-aware CTA path aligned with `PublicNavbar` behavior:
+  - signed-in users route to `/dashboard`
+  - signed-out users trigger `authClient.signIn.social({ provider: "github", callbackURL: "/dashboard" })`
+- Homepage messaging now frames dashboard as the place to configure webhook delivery, reducing confusing pre-auth setup on public home.
+
+## Public Docs Signature Reference
+
+- `app/app/docs/page.tsx` includes a dedicated signature section documenting the delivery header `webhook-signature` and verification method.
+- Signature behavior documented there matches runtime code in `webhook-publisher/src/worker.py` and `testing/mock_webhook.py`:
+  - algorithm: HMAC-SHA256
+  - input for signing: canonical JSON of `body.data`
+  - canonicalization: sort jobs by `url`, sort object keys, compact JSON separators `(",", ":")`, UTF-8 bytes
+- Practical receiver snippet is included on the docs page for quick copy-and-adapt integration.
+- AI-friendly companion file lives at `app/public/llm.txt` with concise setup + signature verification instructions.
 
 ## Agent Note
 

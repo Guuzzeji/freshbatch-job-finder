@@ -1,0 +1,23 @@
+Freshbatch webhook quick guide
+
+Setup
+1) Save your HTTPS endpoint in Freshbatch.
+2) Keep a shared secret, this is your sign key.
+3) Receive POST requests with JSON body: {"data": [job, ...]}.
+
+Signature header
+- Header name: webhook-signature
+- Algorithm: HMAC-SHA256
+- Digest format: lowercase hex
+
+Canonical payload for signature verification
+1) Read body.data, this is a list of job objects.
+2) Sort the list by each job.url value.
+3) JSON serialize sorted list with:
+   - sort object keys alphabetically
+   - compact separators: (",", ":")
+4) HMAC the exact UTF-8 bytes of that JSON string using your sign key.
+5) Compare expected hex digest with webhook-signature using constant-time compare.
+
+If signature mismatch, return 401.
+If accepted, return a fast 2xx.
