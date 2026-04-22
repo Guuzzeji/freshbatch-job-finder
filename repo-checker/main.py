@@ -18,8 +18,9 @@ REDIS_PORT = int(os.getenv('REDIS_PORT') or 6379)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)s - %(message)s',
-    filename='repo-checker.log',
-    filemode='a'
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 
 redis_pool = redis.ConnectionPool(
