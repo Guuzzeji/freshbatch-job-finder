@@ -68,7 +68,6 @@ export default function HookCard({
 
   return (
     <div className="relative mb-5 rounded-2xl border border-[color:var(--border)] bg-[color:var(--cream)] px-[1.4rem] py-5 max-sm:px-4">
-      <div className="absolute inset-x-0 top-0 h-[3px] rounded-t-[14px] bg-[color:var(--caramel)]" />
       <div className="mb-4 flex items-center justify-between">
         <div className="text-sm font-bold text-[color:var(--brown)]">
           delivery endpoint
@@ -93,12 +92,12 @@ export default function HookCard({
           aria-label="Delivery endpoint"
         />
       </div>
-      <div className="mb-4 font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
+      <div className="mb-4 font-[var(--font-dm-mono)] text-[12px] text-[color:var(--muted)]">
         Update settings below, then use one save action to persist.
       </div>
       {signKey && (
-        <div className="mb-4 flex items-center gap-2 rounded-[10px] border border-[color:var(--border-light)] bg-white px-3 py-2">
-          <span className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)] shrink-0">
+        <div className="mb-4 flex items-center gap-2 rounded-[12px] border border-[color:var(--border-light)] bg-white px-3 py-2">
+          <span className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)] shrink-0 font-bold">
             sign key
           </span>
           <span className="min-w-0 flex-1 truncate font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)]">
@@ -116,13 +115,13 @@ export default function HookCard({
           </button>
         </div>
       )}
-      <div className="font-[var(--font-dm-mono)] text-[10px] text-[color:var(--muted)]">
+      <div className="font-[var(--font-dm-mono)] text-[12px] text-[color:var(--muted)]">
         Freshbatch sends each matching job payload to the endpoint you configure
         here.
       </div>
       <Link
         href="/docs"
-        className="mt-2 inline-flex font-[var(--font-dm-mono)] text-[10px] text-[color:var(--brown-mid)] underline decoration-dotted underline-offset-[3px] transition hover:text-[color:var(--caramel)]"
+        className="mt-2 inline-flex font-[var(--font-dm-mono)] text-[12px] text-[color:var(--brown-mid)] underline decoration-dotted underline-offset-[3px] transition hover:text-[color:var(--caramel)]"
       >
         need setup help? open webhook docs
       </Link>
