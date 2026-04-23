@@ -60,20 +60,24 @@ class RepoChangesParser:
         try:
             if not os.path.exists(repo_path):
                 os.makedirs(repo_path, exist_ok=True)
-                subprocess.Popen(
+                subprocess.run(
                     ["git", "clone", repo_url, repo_path, "--depth", "1"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                ).wait()
+                    check=True
+                )
             else:
-                subprocess.Popen(
+                subprocess.run(
                     ["git", "pull"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
                     cwd=repo_path,
-                ).wait()   
+                    check=True
+                )   
+        except subprocess.CalledProcessError as e:
+            logger.error(f"[RepoChangesParser] Git process failed for repo '{repo_name}'. Return code: {e.returncode}. Stderr: {e.stderr}")
         except Exception as e:
             logger.error(f"[RepoChangesParser] Unexpected error while pulling repo '{repo_name}': {str(e)}", exc_info=True)
 

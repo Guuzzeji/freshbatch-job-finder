@@ -9,6 +9,37 @@ import { isValidWebhookSettingsPayload } from "@/lib/webhook";
 import type { Selectable } from "kysely";
 import type { WebhooksLogTable } from "@/lib/db/webhook-types";
 import { getRedisClient } from "@/lib/redis";
+import dns from "dns";
+
+async function isSafeIp(hostname: string): Promise<boolean> {
+  if (hostname === "localhost" || !hostname.includes(".")) {
+    return false;
+  }
+
+  try {
+    const { address } = await dns.promises.lookup(hostname);
+    // Block standard private IP ranges (10.x.x.x, 172.16-31.x.x, 192.168.x.x)
+    // Also block loopback (127.x.x.x) and link-local (169.254.x.x)
+    if (
+      address.startsWith("10.") ||
+      address.startsWith("192.168.") ||
+      address.startsWith("127.") ||
+      address.startsWith("169.254.") ||
+      address === "0.0.0.0"
+    ) {
+      return false;
+    }
+    if (address.startsWith("172.")) {
+      const secondOctet = parseInt(address.split(".")[1], 10);
+      if (secondOctet >= 16 && secondOctet <= 31) {
+        return false;
+      }
+    }
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 async function getAuthedUserIdOrThrow() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -32,6 +63,20 @@ export async function getWebhookSettingsForCurrentUser() {
 export async function saveWebhookSettingsAction(input: unknown) {
   const userId = await getAuthedUserIdOrThrow();
   if (!isValidWebhookSettingsPayload(input)) {
+    throw new Error("invalid_payload");
+  }
+
+  const { hookUrl } = input as { hookUrl: string };
+  try {
+    const urlObj = new URL(hookUrl);
+    const safe = await isSafeIp(urlObj.hostname);
+    if (!safe) {
+      throw new Error("invalid_ip");
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === "invalid_ip") {
+      throw new Error("invalid_ip");
+    }
     throw new Error("invalid_payload");
   }
 

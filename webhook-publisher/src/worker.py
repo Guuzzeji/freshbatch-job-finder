@@ -5,6 +5,9 @@ import requests
 import redis
 import os
 import psycopg2
+import ipaddress
+import socket
+import urllib.parse
 from time import sleep
 import logging
 from dotenv import load_dotenv
@@ -91,17 +94,31 @@ def create_worker(redis_pool, worker_id: int, worker_queue: str, job_queue: str)
 
     while True:
         logger.info(f"[Worker-{worker_id}] Polling job queue '{job_queue}' for pending deliveries")
-        queue_pop_msg = redis_conn.lmove(job_queue, worker_queue, 'RIGHT', 'LEFT')
+        try:
+            queue_pop_msg = redis_conn.lmove(job_queue, worker_queue, 'RIGHT', 'LEFT')
+        except redis.exceptions.RedisError as e:
+            logger.error(f"[Worker-{worker_id}] Redis connection error during lmove: {str(e)}")
+            sleep(5)
+            continue
+            
         if queue_pop_msg is None:
             logger.info(f"[Worker-{worker_id}] No pending jobs in queue — sleeping 5s before next poll")
             sleep(5)
             continue
         
-        logger.info(f"[Worker-{worker_id}] Job found in queue — beginning webhook delivery")
-        package = decode_package(str(queue_pop_msg))
-        signature = sign_package(package["data"], package["hook_metadata"].sign_key)
-
         try:
+            package = decode_package(str(queue_pop_msg))
+            
+            # SSRF Protection Check
+            parsed_url = urllib.parse.urlparse(package["hook_metadata"].hook_url)
+            ip = socket.gethostbyname(parsed_url.hostname)
+            ip_obj = ipaddress.ip_address(ip)
+            
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
+                raise ValueError(f"SSRF block: Attempted delivery to private/internal IP {ip}")
+            
+            signature = sign_package(package["data"], package["hook_metadata"].sign_key)
+            
             logger.info(f"[Worker-{worker_id}] Sending {len(package['data'])} job(s) to webhook_id={package['hook_metadata'].webhook_id} at {package['hook_metadata'].hook_url}")
             json_payload = {"data": [job.to_json() for job in package["data"]]}
             http_call = requests.post(
@@ -133,17 +150,22 @@ def create_worker(redis_pool, worker_id: int, worker_queue: str, job_queue: str)
                     jobs_payload=jobs_payload_str,
                     is_test=is_test
                 )
+        except ValueError as e:
+            logger.error(f"[Worker-{worker_id}] Package parsing or SSRF validation failed: {str(e)}", exc_info=True)
+            # We don't have webhook metadata to log a failure, so we just let the finally block clear it
         except Exception as e:
-            logger.error(f"[Worker-{worker_id}] Exception during webhook delivery: webhook_id={package['hook_metadata'].webhook_id}, url={package['hook_metadata'].hook_url}, error={str(e)}", exc_info=True)
-            is_test = any(job.is_test for job in package["data"])
-            jobs_payload_str = json.dumps([job.to_json() for job in package["data"]])
-            log_webhook_request(
-                webhook_id=package["hook_metadata"].webhook_id,
-                success=False,
-                error_message=str(e)[:1000],
-                status_code=None,
-                jobs_payload=jobs_payload_str,
-                is_test=is_test
-            )
+            logger.error(f"[Worker-{worker_id}] Exception during webhook delivery: {str(e)}", exc_info=True)
+            # If package is defined, try logging the failure
+            if 'package' in locals() and package.get("hook_metadata"):
+                is_test = any(job.is_test for job in package.get("data", []))
+                jobs_payload_str = json.dumps([job.to_json() for job in package.get("data", [])])
+                log_webhook_request(
+                    webhook_id=package["hook_metadata"].webhook_id,
+                    success=False,
+                    error_message=str(e)[:1000],
+                    status_code=None,
+                    jobs_payload=jobs_payload_str,
+                    is_test=is_test
+                )
         finally:
             redis_conn.lrem(worker_queue, 1, queue_pop_msg) # pyright: ignore[reportArgumentType]

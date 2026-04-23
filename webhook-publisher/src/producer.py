@@ -75,7 +75,13 @@ def create_producer(redis_pool, fanout_queue: str, send_queue: str):
     while True:
         logger.info("[Producer] Polling fanout queue for new job payloads")
         # NOTE: We can do this because we always have a single producer
-        payload = redis_conn.lpop(fanout_queue)
+        try:
+            payload = redis_conn.lpop(fanout_queue)
+        except redis.exceptions.RedisError as e:
+            logger.error(f"[Producer] Redis connection error during lpop: {str(e)}")
+            sleep(5)
+            continue
+            
         if payload is None:
             logger.info("[Producer] No pending payloads in fanout queue — sleeping 5s before next poll")
             sleep(5)
