@@ -9,7 +9,7 @@ import logging
 from shared.interface import JobInformation
 from shared.constant import QUEUE_NAME_PAYLOADS_FANOUT
 
-REPO_DATE_KEY = ":last_commit_date"
+REPO_DATE_KEY = "last_commit_date"
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -49,6 +49,10 @@ class RepoChangesParser:
         if not os.path.exists(ALL_REPO_SAVE_PATH):
             os.mkdir(ALL_REPO_SAVE_PATH)
 
+    def repo_exists(self, repo_name: str) -> bool:
+        repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
+        return os.path.exists(repo_path) and os.path.isdir(repo_path)
+
     def pull(self, repo_url: str, repo_name: str) -> None:
         self.__create_repo_folder()
         repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
@@ -56,22 +60,20 @@ class RepoChangesParser:
         try:
             if not os.path.exists(repo_path):
                 os.makedirs(repo_path, exist_ok=True)
-                subprocess.run(
-                    ["git", "clone", repo_url, repo_path],
-                    check=True,
-                    capture_output=True,
+                subprocess.Popen(
+                    ["git", "clone", repo_url, repo_path, "--depth", "1"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
-                )
+                ).wait()
             else:
-                subprocess.run(
+                subprocess.Popen(
                     ["git", "pull"],
-                    check=True,
-                    capture_output=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
                     cwd=repo_path,
-                )
-        except subprocess.CalledProcessError as e:
-            logger.error(f"[RepoChangesParser] git command failed for repo '{repo_name}': {e.stderr.strip()}", exc_info=True)
+                ).wait()   
         except Exception as e:
             logger.error(f"[RepoChangesParser] Unexpected error while pulling repo '{repo_name}': {str(e)}", exc_info=True)
 

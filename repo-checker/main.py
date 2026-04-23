@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 from repos.SimplifyJobs import SimplifyJobs
+from repos.SimplifySummer2026 import SimplifySummer2026
 
 load_dotenv()
 
@@ -30,7 +31,8 @@ redis_pool = redis.ConnectionPool(
 )
 
 REPOS = [
-    SimplifyJobs(redis_pool)
+    SimplifyJobs(redis_pool),
+    SimplifySummer2026(redis_pool)
 ]
 
 def job():
@@ -42,10 +44,7 @@ def job():
         thread.start()
         threads.append(thread)
 
-    for thread in threads:
-        thread.join()
-
-schedule.every(5).seconds.do(job)
+schedule.every(2).seconds.do(job)
 
 if __name__ == "__main__":
     while True:

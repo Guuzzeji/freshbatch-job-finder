@@ -9,9 +9,9 @@ from repo_change_parser import RepoChangesParser, ALL_REPO_SAVE_PATH
 
 logger = logging.getLogger(__name__)
 
-class SimplifyJobs(RepoChangesParser):
-    __repo_name = "SimplifyJobs-New-Grad-Positions"
-    __repo_url = "https://github.com/SimplifyJobs/New-Grad-Positions"
+class SimplifySummer2026(RepoChangesParser):
+    __repo_name = "SimplifyJobs-Summer2026-Internships"
+    __repo_url = "https://github.com/SimplifyJobs/Summer2026-Internships"
     __repo_path = ALL_REPO_SAVE_PATH + __repo_name
 
     def create_job_report(self, json_buffer: list[str]) -> JobInformation | None:
@@ -23,7 +23,7 @@ class SimplifyJobs(RepoChangesParser):
 
             for key in check_keys:
                 if key not in report:
-                    logger.warning(f"[SimplifyJobs] Skipping malformed job entry — missing required key '{key}' in JSON buffer")
+                    logger.warning(f"[SimplifySummer2026] Skipping malformed job entry — missing required key '{key}' in JSON buffer")
                     return None
 
             return JobInformation(
@@ -35,12 +35,12 @@ class SimplifyJobs(RepoChangesParser):
                 report["degrees"],
                 report["sponsorship"],
                 report["locations"],
-                True,
-                False,
+                False, # is_fte
+                True,  # is_intern
                 report["category"],
             )
         except Exception as e:
-            logger.error(f"[SimplifyJobs] Failed to parse job report from JSON buffer: {str(e)}", exc_info=True)
+            logger.error(f"[SimplifySummer2026] Failed to parse job report from JSON buffer: {str(e)}", exc_info=True)
             return None
 
     def parse_job_data(self, diff: dict[str, list[tuple[int, str]]]) -> list[JobInformation]:
@@ -59,7 +59,6 @@ class SimplifyJobs(RepoChangesParser):
                     is_job = False
                     json_buffer.append(change[1].strip())
                     
-                    self.create_job_report(json_buffer)
                     job_report = self.create_job_report(json_buffer)
 
                     if job_report is not None:
@@ -98,9 +97,9 @@ class SimplifyJobs(RepoChangesParser):
                     # TODO: add tracker for commit hash to get track of which commits were parsed
                     jobs.extend(self.parse_job_data(file.diff_parsed))
         except Exception as e:
-            logger.error(f"[SimplifyJobs] Unexpected error while parsing commits: {str(e)}", exc_info=True)
+            logger.error(f"[SimplifySummer2026] Unexpected error while parsing commits: {str(e)}", exc_info=True)
 
-        logger.info(f"[SimplifyJobs] Check complete — dispatched {len(jobs)} new job(s) to fanout queue")
+        logger.info(f"[SimplifySummer2026] Check complete — dispatched {len(jobs)} new job(s) to fanout queue")
 
         if len(jobs) > 0:
             asyncio.run(super().add_jobs_batch(jobs))
