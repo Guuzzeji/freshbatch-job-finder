@@ -12,13 +12,6 @@ import { authClient } from "@/lib/auth-client";
 
 const HERO_STATS = [
   {
-    label: "jobs today",
-    target: 2341,
-    prefix: "",
-    suffix: "",
-    decimals: 0,
-  },
-  {
     label: "avg bake time",
     target: 1.8,
     prefix: "~",
@@ -27,7 +20,7 @@ const HERO_STATS = [
   },
   {
     label: "registered job goblins",
-    target: 847,
+    target: 137,
     prefix: "",
     suffix: "",
     decimals: 0,
@@ -193,7 +186,7 @@ export default function LandingPage() {
             {onboardingCta}
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-3">
             {HERO_STATS.map((stat, index) => (
               <div
                 key={stat.label}
@@ -217,9 +210,6 @@ export default function LandingPage() {
       <div className="mx-auto max-w-[1140px] px-6 py-6 max-sm:px-5">
         <div className="mb-1 flex items-center gap-2 font-[var(--font-dm-mono)] text-[10px] uppercase tracking-[1.5px] text-[color:var(--caramel)]">
           <span>🔥 latest batch</span>
-          <span className="motion-pulse-soft rounded-full border border-[color:var(--border)] bg-white/80 px-2 py-[2px] text-[9px] tracking-[1.2px] text-[color:var(--brown-mid)]">
-            live mock feed
-          </span>
         </div>
         <div className="mb-6 text-[clamp(1.8rem,4vw,2.8rem)] leading-none font-black tracking-[-1.5px] text-[color:var(--brown)]">
           fresh out the oven

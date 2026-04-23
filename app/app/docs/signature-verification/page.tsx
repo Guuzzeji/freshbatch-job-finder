@@ -14,10 +14,7 @@ export default function SignatureVerificationPage() {
         signature verification
       </div>
       <h1 className="text-[2rem] font-black tracking-[-1px] leading-tight">
-        Verify{" "}
-        <code className="font-[var(--font-dm-mono)] text-[1.6rem]">
-          webhook-signature
-        </code>
+        Verify Webhook-Signature
       </h1>
       <p className="mt-4 text-[15px] leading-[1.7] text-[color:var(--brown-mid)]">
         Every delivery includes a{" "}

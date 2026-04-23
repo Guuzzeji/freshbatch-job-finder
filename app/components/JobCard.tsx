@@ -23,11 +23,11 @@ export default function JobCard({ job }: { job: Job }) {
 
       <div className="mb-2.5 flex flex-wrap gap-[5px]">
         <span className={`${tagBase} ${typeTagClass}`}>{typeLabel}</span>
-        <span
+        {/* <span
           className={`${tagBase} border-[color:var(--border)] bg-[color:var(--cream-dark)] text-[color:var(--brown)]`}
         >
           {job.pay}
-        </span>
+        </span> */}
         {isRemote && (
           <span
             className={`${tagBase} border-[#C084FC] bg-[#F0EAF8] text-[#5E3A8C]`}

@@ -48,7 +48,9 @@ export default function PublicNavbar({ variant }: PublicNavbarProps) {
               <Link href="/docs" className={navLinkClass}>
                 docs
               </Link>
-              <div className={navLinkClass}>twitter/x</div>
+              <Link href="https://x.com/Guuzzeji" className={navLinkClass}>
+                twitter/x
+              </Link>
             </>
           ) : (
             <Link href="/" className={navLinkClass}>
@@ -101,7 +103,12 @@ export default function PublicNavbar({ variant }: PublicNavbarProps) {
               >
                 docs
               </Link>
-              <div className={mobileNavLinkClass}>twitter/x</div>
+              <Link
+                href="https://x.com/Guuzzeji"
+                className={mobileNavLinkClass}
+              >
+                twitter/x
+              </Link>
             </>
           ) : (
             <Link

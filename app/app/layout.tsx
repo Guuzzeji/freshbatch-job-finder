@@ -17,7 +17,7 @@ const dmMono = DM_Mono({
   weight: ["400", "500"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://freshbatch.dev";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://freshbatch.tech";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -27,7 +27,13 @@ export const metadata: Metadata = {
   },
   description:
     "Deliver fresh internship and new grad jobs to your own webhook endpoint, bot, or automation the second they drop.",
-  keywords: ["internship", "new grad", "webhook", "CS jobs", "software engineering"],
+  keywords: [
+    "internship",
+    "new grad",
+    "webhook",
+    "CS jobs",
+    "software engineering",
+  ],
   authors: [{ name: "freshbatch" }],
   creator: "freshbatch",
   alternates: {
@@ -56,7 +62,7 @@ export const metadata: Metadata = {
     description:
       "Deliver fresh internship and new grad jobs to your own webhook endpoint, bot, or automation the second they drop.",
     images: ["/og-image.png"],
-    creator: "@freshbatch",
+    creator: "@Guuzzeji",
   },
   robots: {
     index: true,
