@@ -24,7 +24,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: app/Dockerfile
+      dockerfile: frontend.dockerfile
     container_name: app
     restart: always
     environment:
@@ -47,7 +47,7 @@ services:
   repo-checker:
     build:
       context: .
-      dockerfile: repo-checker/Dockerfile
+      dockerfile: repo-checker.dockerfile
     container_name: repo-checker
     restart: always
     environment:
@@ -61,7 +61,7 @@ services:
   webhook-publisher:
     build:
       context: .
-      dockerfile: webhook-publisher/Dockerfile
+      dockerfile: web-pub.dockerfile
     container_name: webhook-publisher
     restart: always
     environment:
