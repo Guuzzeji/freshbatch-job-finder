@@ -20,6 +20,9 @@ COPY app/ .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+RUN npm install -g corepack
+RUN corepack enable
+RUN corepack cache clean
 RUN npm install -g pnpm
 RUN pnpm install
 RUN pnpm run build
