@@ -21,7 +21,6 @@ COPY app/ .
 # ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN corepack enable
-RUN corepack install
 RUN pnpm install
 RUN pnpm run build
 
