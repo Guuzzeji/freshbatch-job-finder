@@ -9,7 +9,9 @@ declare global {
 }
 
 function createWebhookDb() {
-  const connectionString = process.env.DATABASE_WEBHOOK_URL;
+  const connectionString =
+    process.env.DATABASE_WEBHOOK_URL ||
+    "postgres://postgres:password@localhost:5432/webhook_db";
 
   if (!connectionString) {
     throw new Error("DATABASE_WEBHOOK_URL is required");
