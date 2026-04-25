@@ -7,7 +7,7 @@ declare global {
 }
 
 function createRedisClient() {
-  const url = process.env.REDIS_URL;
+  const url = process.env.REDIS_URL || "redis://localhost:6379";
 
   if (!url) {
     throw new Error("REDIS_URL is required");
