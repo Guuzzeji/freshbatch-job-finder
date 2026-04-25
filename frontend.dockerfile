@@ -20,7 +20,10 @@ COPY app/ .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN corepack enable pnpm && pnpm run build;
+RUN corepack enable
+RUN corepack install
+RUN pnpm install
+RUN pnpm run build
 
 # 3. Production image, copy all the files and run next
 FROM base AS runner
