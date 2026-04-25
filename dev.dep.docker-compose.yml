@@ -14,12 +14,25 @@ services:
     restart: always
     volumes:
       - dev-main-db:/var/lib/postgresql/data
-      - ./db-queries/create_all.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_PASSWORD: mySecretPassword
       POSTGRES_USER: myUser
     ports:
       - "5432:5432"
+    networks:
+      - dev-shared
+
+  create-db-service:
+    build:
+      context: .
+      dockerfile: create-db.dockerfile
+    container_name: create-db-service
+    environment:
+      POSTGRES_USER: myUser
+      POSTGRES_PASSWORD: mySecretPassword
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on: db
     networks:
       - dev-shared
 

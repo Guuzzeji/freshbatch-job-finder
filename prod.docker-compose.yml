@@ -14,7 +14,6 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -78,6 +77,22 @@ services:
     depends_on:
       - redis
       - db
+    networks:
+      - app-network
+
+  create-db-service:
+    build:
+      context: .
+      dockerfile: create-db.dockerfile
+    container_name: create-db-service
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - app-network
 
