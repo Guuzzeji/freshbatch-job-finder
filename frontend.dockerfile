@@ -2,16 +2,18 @@ FROM node:25.9-bookworm AS base
 
 # 1. Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY /app/package.json /app/pnpm-lock.yaml* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile;
+RUN npm install -g pnpm
+RUN pnpm i --frozen-lockfile;
 
 # 2. Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY app/ .
 
 # Next.js collects completely anonymous telemetry data about general usage.
@@ -19,8 +21,8 @@ COPY app/ .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN npm install
-RUN npm run build
+RUN npm install -g pnpm
+RUN pnpm run build
 
 # 3. Production image, copy all the files and run next
 FROM base AS runner
