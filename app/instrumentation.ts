@@ -5,18 +5,27 @@ export async function register() {
   const { getMigrations } = await import("better-auth/db/migration");
   const { auth } = await import("@/lib/auth");
 
-  const { toBeCreated, toBeAdded, runMigrations } = await getMigrations(
-    auth.options,
-  );
+  async function createAuthDb() {
+    const { toBeCreated, toBeAdded, runMigrations } = await getMigrations(
+      auth.options,
+    );
 
-  if (toBeCreated.length === 0 && toBeAdded.length === 0) {
-    console.log("[better-auth] db schema up to date");
-    return;
+    if (toBeCreated.length === 0 && toBeAdded.length === 0) {
+      console.log("[better-auth] db schema up to date");
+      return;
+    }
+
+    console.log(
+      `[better-auth] running migrations — ${toBeCreated.length} table(s) to create, ${toBeAdded.length} column(s) to add`,
+    );
+    await runMigrations();
+    console.log("[better-auth] migrations complete ✓");
   }
 
-  console.log(
-    `[better-auth] running migrations — ${toBeCreated.length} table(s) to create, ${toBeAdded.length} column(s) to add`,
-  );
-  await runMigrations();
-  console.log("[better-auth] migrations complete ✓");
+  await new Promise<void>((resolve) => {
+    setTimeout(() => {
+      createAuthDb();
+      resolve();
+    }, 1000 * 5); // delay a bit to let the app start up
+  });
 }
