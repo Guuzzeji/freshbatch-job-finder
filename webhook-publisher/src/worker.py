@@ -39,7 +39,7 @@ def sign_package(jobs: list["JobInformation"], secret: str) -> str:
         [job.to_json() for job in jobs],
         key=lambda j: j["url"],
     )
-    canonical = json.dumps(sorted_jobs, sort_keys=True, separators=(",", ":"))
+    canonical = json.dumps(sorted_jobs, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hmac.new(
         secret.encode("utf-8"),
         canonical.encode("utf-8"),
