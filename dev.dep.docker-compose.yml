@@ -27,6 +27,7 @@ services:
       context: .
       dockerfile: create-db.dockerfile
     container_name: create-db-service
+    restart: "no"
     environment:
       POSTGRES_USER: myUser
       POSTGRES_PASSWORD: mySecretPassword
