@@ -120,10 +120,11 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
   - Integrations pages, `/docs/integrations`, `/docs/integrations/discord`, `/docs/integrations/fastapi`, `/docs/integrations/express`
 - `app/app/docs/integrations/discord/page.tsx` showcases the Freshbatch Discord notification bot example and links to `https://github.com/Guuzzeji/freshbatch-discord-notification-bot`.
 - `app/app/docs/integrations/express/page.tsx` documents explicit `body-parser` installation and `app.use(bodyParser.json())` middleware setup in the TypeScript example.
-- Signature verification guidance now lives in the dedicated Signature Verification routes and should stay aligned with `webhook-publisher/src/worker.py` and `testing/mock_webhook.py`:
+- \*\*Signature verification guidance now lives in the dedicated Signature Verification routes and should stay aligned with `webhook-publisher/src/worker.py` and `testing/mock_webhook.py`:
   - algorithm: HMAC-SHA256
   - input for signing: canonical JSON of `body.data`
   - canonicalization: sort jobs by `url`, sort object keys, compact JSON separators `(",", ":")`, UTF-8 bytes
+  - **CRITICAL: Python must use `ensure_ascii=False` in json.dumps()** — do NOT allow escaping of Unicode characters (em dashes, accents) as `\uXXXX` sequences. Mismatched ASCII encoding is the most common signature verification failure.
 - AI-friendly companion file lives at `app/public/llm.txt` with concise setup and signature verification instructions.
 
 ## Open Graph Metadata (Public Pages)

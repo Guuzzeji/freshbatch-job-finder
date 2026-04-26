@@ -91,11 +91,27 @@ export default function SignatureVerificationPage() {
           without indent in TypeScript (default behavior).
         </li>
         <li>
-          <strong>5. UTF-8 encode</strong> — encode the resulting string as
+          <strong>5. Unicode handling</strong> — emit literal Unicode
+          characters, not ASCII escapes. In Python, use{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">
+            ensure_ascii=False
+          </code>{" "}
+          in{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">
+            json.dumps()
+          </code>
+          . Do <strong>not</strong> allow JSON serialization to escape non-ASCII
+          characters (e.g., em dashes, accents) as{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">\uXXXX</code>{" "}
+          sequences — this produces different byte strings and breaks
+          verification.
+        </li>
+        <li>
+          <strong>6. UTF-8 encode</strong> — encode the resulting string as
           UTF-8 bytes.
         </li>
         <li>
-          <strong>6. HMAC-SHA256</strong> — compute HMAC-SHA256 of those bytes
+          <strong>7. HMAC-SHA256</strong> — compute HMAC-SHA256 of those bytes
           using your signing secret (also UTF-8 encoded). Take the hex digest.
         </li>
       </ol>
@@ -127,6 +143,48 @@ export default function SignatureVerificationPage() {
           — Return{" "}
           <code className="font-[var(--font-dm-mono)] text-[13px]">401</code> if
           the header is missing entirely.
+        </li>
+      </ul>
+
+      <h2 className="mt-8 text-[1.25rem] font-bold tracking-[-0.5px]">
+        Common pitfalls
+      </h2>
+      <ul className="mt-3 space-y-2 text-[15px] leading-[1.7] text-[color:var(--brown-mid)]">
+        <li>
+          — <strong>ASCII escaping mismatch:</strong> If your JSON serializer
+          converts non-ASCII characters (em dashes, accents, etc.) to{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">\uXXXX</code>{" "}
+          escape sequences, the signature will not match. Ensure literal Unicode
+          output: Python requires{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">
+            ensure_ascii=False
+          </code>
+          .
+        </li>
+        <li>
+          — <strong>Incorrect input data:</strong> Signing the full request body{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">
+            {"{"}data: [...]{"}"}{" "}
+          </code>
+          instead of just{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">data</code>{" "}
+          alone. The signature is only over the jobs array, not the envelope.
+        </li>
+        <li>
+          — <strong>Missing secret strip:</strong> If your signing secret has
+          trailing whitespace (from{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">.env</code>{" "}
+          files), it will not match. Load and trim carefully.
+        </li>
+        <li>
+          — <strong>Middleware body mutation:</strong> Express middleware that
+          parses the body and then re-stringifies can reorder keys or change
+          spacing, breaking the canonical form. Always use{" "}
+          <code className="font-[var(--font-dm-mono)] text-[13px]">
+            body-parser
+          </code>{" "}
+          or an equivalent to parse once, then re-serialize with your
+          canonicalization rules.
         </li>
       </ul>
 
