@@ -35,14 +35,19 @@ REPOS = [
     SimplifySummer2026(redis_pool)
 ]
 
+_job_lock = threading.Lock()
+
 def job():
+    if not _job_lock.acquire(blocking=False):
+        logging.warning("Skipping repo-checker tick because previous run is still in progress")
+        return
+
     logging.info("Running repo-checker")
-    threads = []
-    
-    for repo in REPOS:
-        thread = threading.Thread(target=repo.check, daemon=True)
-        thread.start()
-        threads.append(thread)
+    try:
+        for repo in REPOS:
+            repo.check()
+    finally:
+        _job_lock.release()
 
 schedule.every(2).seconds.do(job)
 

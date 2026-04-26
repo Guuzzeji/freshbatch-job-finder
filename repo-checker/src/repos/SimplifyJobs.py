@@ -73,13 +73,17 @@ class SimplifyJobs(RepoChangesParser):
 
         return jobs
 
-    def get_latest_commits(self, last_date: datetime = datetime.now()) -> list[Commit]:
+    def get_latest_commits(self, last_date: datetime | None = None) -> list[Commit]:
+        if last_date is None:
+            last_date = datetime.now()
+
         return [commit for commit in Repository(
             self.__repo_path,
             since=last_date,
             filepath=".github/scripts/listings.json",
             only_in_branch="dev",
-            order="reverse")
+            order="reverse",
+            num_workers=1)
             .traverse_commits()]
 
     def check(self) -> None:

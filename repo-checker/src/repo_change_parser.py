@@ -2,6 +2,7 @@ import os
 import json
 import redis
 import subprocess
+import time
 from datetime import datetime
 from dotenv import load_dotenv
 import logging
@@ -53,6 +54,72 @@ class RepoChangesParser:
         repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
         return os.path.exists(repo_path) and os.path.isdir(repo_path)
 
+    def _run_git_command_with_retry(
+        self,
+        command: list[str],
+        repo_name: str,
+        cwd: str | None = None,
+        max_attempts: int = 3,
+    ) -> None:
+        for attempt in range(1, max_attempts + 1):
+            try:
+                subprocess.run(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    cwd=cwd,
+                    check=True,
+                )
+                return
+            except subprocess.CalledProcessError as e:
+                stderr_text = str(e.stderr or "")
+                is_transient_resource_error = "Resource temporarily unavailable" in stderr_text
+                if is_transient_resource_error and attempt < max_attempts:
+                    backoff_seconds = attempt
+                    logger.warning(
+                        "[RepoChangesParser] Transient git failure for repo '%s' (attempt %s/%s). "
+                        "Retrying in %ss. Stderr: %s",
+                        repo_name,
+                        attempt,
+                        max_attempts,
+                        backoff_seconds,
+                        stderr_text.strip(),
+                    )
+                    time.sleep(backoff_seconds)
+                    continue
+
+                logger.error(
+                    "[RepoChangesParser] Git process failed for repo '%s'. Return code: %s. Stderr: %s",
+                    repo_name,
+                    e.returncode,
+                    stderr_text,
+                )
+                return
+            except OSError as e:
+                # Errno 11 is commonly raised when the process table is temporarily exhausted.
+                if e.errno == 11 and attempt < max_attempts:
+                    backoff_seconds = attempt
+                    logger.warning(
+                        "[RepoChangesParser] OS process spawn failed for repo '%s' (attempt %s/%s). "
+                        "Retrying in %ss. Error: %s",
+                        repo_name,
+                        attempt,
+                        max_attempts,
+                        backoff_seconds,
+                        str(e),
+                    )
+                    time.sleep(backoff_seconds)
+                    continue
+
+                logger.error(
+                    "[RepoChangesParser] Unexpected OS error while running git for repo '%s': %s",
+                    repo_name,
+                    str(e),
+                    exc_info=True,
+                )
+                return
+
     def pull(self, repo_url: str, repo_name: str) -> None:
         self.__create_repo_folder()
         repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
@@ -60,26 +127,23 @@ class RepoChangesParser:
         try:
             if not os.path.exists(repo_path):
                 os.makedirs(repo_path, exist_ok=True)
-                subprocess.run(
+                self._run_git_command_with_retry(
                     ["git", "clone", repo_url, repo_path, "--depth", "1"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    check=True
+                    repo_name,
                 )
             else:
-                subprocess.run(
+                self._run_git_command_with_retry(
                     ["git", "pull"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
+                    repo_name,
                     cwd=repo_path,
-                    check=True
-                )   
-        except subprocess.CalledProcessError as e:
-            logger.error(f"[RepoChangesParser] Git process failed for repo '{repo_name}'. Return code: {e.returncode}. Stderr: {e.stderr}")
-        except Exception as e:
-            logger.error(f"[RepoChangesParser] Unexpected error while pulling repo '{repo_name}': {str(e)}", exc_info=True)
+                )
+        except OSError as e:
+            logger.error(
+                "[RepoChangesParser] Unexpected error while pulling repo '%s': %s",
+                repo_name,
+                str(e),
+                exc_info=True,
+            )
 
     def check(self) -> None:
         return None

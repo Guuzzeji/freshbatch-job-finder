@@ -132,6 +132,13 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - To replace the placeholder, overwrite `app/public/og-image.png` with branded artwork at the same path.
 - If docs should use a different image later, add `app/public/og-docs.png` and update docs layout image refs to `/og-docs.png`.
 
+## Repo-Checker Runtime Guardrails
+
+- `repo-checker/main.py` runs checks in a non-overlapping schedule tick. If a previous run is still active, the next tick is skipped.
+- Avoid spawning unbounded background threads in scheduler jobs; run repo checks in-process per tick to prevent thread/process exhaustion.
+- `repo-checker/src/repos/SimplifyJobs.py` and `repo-checker/src/repos/SimplifySummer2026.py` pin PyDriller `Repository(..., num_workers=1)` to cap internal threadpool usage.
+- `repo-checker/src/repo_change_parser.py` wraps git commands with bounded retry/backoff for transient `Resource temporarily unavailable` failures.
+
 ## Agent Note
 
 - **AI Agents:** When you make changes to this repository, please update `CLAUDE.md` so models and other agents have the correct, up-to-date context for the whole project.
