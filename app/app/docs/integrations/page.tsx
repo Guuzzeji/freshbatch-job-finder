@@ -9,6 +9,12 @@ export const metadata: Metadata = {
 
 const integrations = [
   {
+    href: "/docs/integrations/discord",
+    label: "Discord Bot",
+    lang: "TypeScript",
+    desc: "Webhook receiver that verifies signatures and forwards jobs to Discord via rich embeds.",
+  },
+  {
     href: "/docs/integrations/fastapi",
     label: "FastAPI",
     lang: "Python",
@@ -37,7 +43,7 @@ export default function IntegrationsPage() {
         fast 2xx. Pick the one that matches your stack.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {integrations.map((item) => (
           <Link
             key={item.href}
