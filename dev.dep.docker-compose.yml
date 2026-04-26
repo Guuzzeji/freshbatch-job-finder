@@ -33,7 +33,7 @@ services:
       POSTGRES_PASSWORD: mySecretPassword
       DB_HOST: db
       DB_PORT: 5432
-    depends_on: db
+    depends_on: [ db ]
     networks:
       - dev-shared
 

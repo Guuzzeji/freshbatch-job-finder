@@ -87,7 +87,11 @@ class SimplifyJobs(RepoChangesParser):
             .traverse_commits()]
 
     def check(self) -> None:
-        self.pull(self.__repo_url, self.__repo_name)
+        pull_ok = self.pull(self.__repo_url, self.__repo_name)
+        if not pull_ok:
+            logger.error("[SimplifyJobs] Skipping parse because repository sync did not complete")
+            return None
+
         last_date = super().get_last_commit_date(self.__repo_name)
         commits = self.get_latest_commits(last_date)
 

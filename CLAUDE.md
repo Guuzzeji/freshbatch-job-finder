@@ -138,6 +138,8 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - Avoid spawning unbounded background threads in scheduler jobs; run repo checks in-process per tick to prevent thread/process exhaustion.
 - `repo-checker/src/repos/SimplifyJobs.py` and `repo-checker/src/repos/SimplifySummer2026.py` pin PyDriller `Repository(..., num_workers=1)` to cap internal threadpool usage.
 - `repo-checker/src/repo_change_parser.py` wraps git commands with bounded retry/backoff for transient `Resource temporarily unavailable` failures.
+- `repo-checker/src/repo_change_parser.py` uses full `git clone` (no shallow `--depth`) and only allows parsing to start after clone/pull success.
+- `repo-checker/src/repo_change_parser.py` supports one-time startup recovery via `REPO_CHECKER_FORCE_RECLONE_ON_STARTUP` (default `true`): existing local repo dirs are force-deleted and cloned fresh before parsing.
 
 ## Agent Note
 

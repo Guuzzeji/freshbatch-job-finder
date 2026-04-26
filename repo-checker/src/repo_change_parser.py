@@ -1,6 +1,7 @@
 import os
 import json
 import redis
+import shutil
 import subprocess
 import time
 from datetime import datetime
@@ -21,6 +22,9 @@ class RepoChangesParser:
 
     def __init__(self, redis_pool) -> None:
         self.__redis_pool = redis_pool
+        force_reclone_env = str(os.getenv("REPO_CHECKER_FORCE_RECLONE_ON_STARTUP") or "true").strip().lower()
+        self._force_reclone_on_startup = force_reclone_env in {"1", "true", "yes", "on"}
+        self._startup_sync_complete = False
 
     def __open_connection(self) -> redis.Redis:
         return redis.Redis(connection_pool=self.__redis_pool)
@@ -54,13 +58,33 @@ class RepoChangesParser:
         repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
         return os.path.exists(repo_path) and os.path.isdir(repo_path)
 
+    def _force_delete_repo_path(self, repo_path: str, repo_name: str) -> bool:
+        if not os.path.exists(repo_path):
+            return True
+
+        try:
+            shutil.rmtree(repo_path)
+            logger.info(
+                "[RepoChangesParser] Force deleted existing local repo '%s' before fresh clone",
+                repo_name,
+            )
+            return True
+        except OSError as e:
+            logger.error(
+                "[RepoChangesParser] Failed to force delete local repo '%s': %s",
+                repo_name,
+                str(e),
+                exc_info=True,
+            )
+            return False
+
     def _run_git_command_with_retry(
         self,
         command: list[str],
         repo_name: str,
         cwd: str | None = None,
         max_attempts: int = 3,
-    ) -> None:
+    ) -> bool:
         for attempt in range(1, max_attempts + 1):
             try:
                 subprocess.run(
@@ -71,7 +95,7 @@ class RepoChangesParser:
                     cwd=cwd,
                     check=True,
                 )
-                return
+                return True
             except subprocess.CalledProcessError as e:
                 stderr_text = str(e.stderr or "")
                 is_transient_resource_error = "Resource temporarily unavailable" in stderr_text
@@ -95,7 +119,7 @@ class RepoChangesParser:
                     e.returncode,
                     stderr_text,
                 )
-                return
+                return False
             except OSError as e:
                 # Errno 11 is commonly raised when the process table is temporarily exhausted.
                 if e.errno == 11 and attempt < max_attempts:
@@ -118,25 +142,64 @@ class RepoChangesParser:
                     str(e),
                     exc_info=True,
                 )
-                return
+                return False
 
-    def pull(self, repo_url: str, repo_name: str) -> None:
+        return False
+
+    def pull(self, repo_url: str, repo_name: str) -> bool:
         self.__create_repo_folder()
         repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
 
         try:
-            if not os.path.exists(repo_path):
-                os.makedirs(repo_path, exist_ok=True)
-                self._run_git_command_with_retry(
-                    ["git", "clone", repo_url, repo_path, "--depth", "1"],
+            if self._force_reclone_on_startup and not self._startup_sync_complete:
+                logger.info(
+                    "[RepoChangesParser] Startup recovery enabled for '%s'; forcing fresh clone",
                     repo_name,
                 )
+                if not self._force_delete_repo_path(repo_path, repo_name):
+                    return False
+
+                clone_ok = self._run_git_command_with_retry(
+                    ["git", "clone", repo_url, repo_path],
+                    repo_name,
+                )
+                if not clone_ok:
+                    return False
+
+                self._startup_sync_complete = True
+                logger.info(
+                    "[RepoChangesParser] Fresh clone complete for repo '%s'; starting parse phase",
+                    repo_name,
+                )
+                return True
+
+            if not os.path.exists(repo_path):
+                clone_ok = self._run_git_command_with_retry(
+                    ["git", "clone", repo_url, repo_path],
+                    repo_name,
+                )
+                if not clone_ok:
+                    return False
+
+                self._startup_sync_complete = True
+                logger.info(
+                    "[RepoChangesParser] Clone complete for repo '%s'; starting parse phase",
+                    repo_name,
+                )
+                return True
             else:
-                self._run_git_command_with_retry(
+                pull_ok = self._run_git_command_with_retry(
                     ["git", "pull"],
                     repo_name,
                     cwd=repo_path,
                 )
+                if pull_ok:
+                    self._startup_sync_complete = True
+                    logger.info(
+                        "[RepoChangesParser] Pull complete for repo '%s'; starting parse phase",
+                        repo_name,
+                    )
+                return pull_ok
         except OSError as e:
             logger.error(
                 "[RepoChangesParser] Unexpected error while pulling repo '%s': %s",
@@ -144,6 +207,7 @@ class RepoChangesParser:
                 str(e),
                 exc_info=True,
             )
+            return False
 
     def check(self) -> None:
         return None
