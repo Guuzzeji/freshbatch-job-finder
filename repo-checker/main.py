@@ -15,6 +15,8 @@ load_dotenv()
 
 REDIS_HOST = str(os.getenv('REDIS_HOST') or 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT') or 6379)
+CHECK_INTERVAL_SECONDS = max(5, int(os.getenv('REPO_CHECKER_INTERVAL_SECONDS') or 30))
+INTER_REPO_DELAY_SECONDS = max(0.0, float(os.getenv('REPO_CHECKER_INTER_REPO_DELAY_SECONDS') or 1.0))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,14 +46,21 @@ def job():
 
     logging.info("Running repo-checker")
     try:
-        for repo in REPOS:
+        for index, repo in enumerate(REPOS):
             repo.check()
+            if index < len(REPOS) - 1 and INTER_REPO_DELAY_SECONDS > 0:
+                time.sleep(INTER_REPO_DELAY_SECONDS)
     finally:
         _job_lock.release()
 
-schedule.every(2).seconds.do(job)
+schedule.every(CHECK_INTERVAL_SECONDS).seconds.do(job)
 
 if __name__ == "__main__":
+    logging.info(
+        "Starting repo-checker schedule (interval=%ss, inter_repo_delay=%ss)",
+        CHECK_INTERVAL_SECONDS,
+        INTER_REPO_DELAY_SECONDS,
+    )
     while True:
         schedule.run_pending()
         time.sleep(1)

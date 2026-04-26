@@ -106,6 +106,9 @@ class SimplifyJobs(RepoChangesParser):
                     # TODO: add tracker for commit hash to get track of which commits were parsed
                     jobs.extend(self.parse_job_data(file.diff_parsed))
         except Exception as e:
+            if self._handle_process_pressure_exception(self.__repo_name, e):
+                logger.warning("[SimplifyJobs] Parse halted due to temporary process pressure")
+                return None
             logger.error(f"[SimplifyJobs] Unexpected error while parsing commits: {str(e)}", exc_info=True)
 
         logger.info(f"[SimplifyJobs] Check complete — dispatched {len(jobs)} new job(s) to fanout queue")
