@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 
 const fullExample = `// server.ts
 import express, { Request, Response } from "express";
+import bodyParser from "body-parser";
 import { createHmac, timingSafeEqual } from "crypto";
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
 
 const WEBHOOK_SECRET = "replace-with-your-sign-key";
 
@@ -102,7 +103,7 @@ export default function IntegrationsExpressPage() {
         Dependencies
       </h2>
       <div className="mt-3 overflow-x-auto rounded-[18px] border border-[color:var(--border-light)] bg-[#2E1505] p-4 font-[var(--font-dm-mono)] text-[12px] leading-[1.8] text-[#FDF6EC]">
-        <pre>{`npm install express
+        <pre>{`npm install express body-parser
 npm install -D @types/express tsx typescript`}</pre>
       </div>
 
