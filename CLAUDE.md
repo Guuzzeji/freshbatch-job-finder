@@ -145,6 +145,7 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - `repo-checker/src/repo_change_parser.py` uses full `git clone` (no shallow `--depth`) and only allows parsing to start after clone/pull success.
 - `repo-checker/src/repo_change_parser.py` supports one-time startup recovery via `REPO_CHECKER_FORCE_RECLONE_ON_STARTUP` (default `true`): existing local repo dirs are force-deleted and cloned fresh before parsing.
 - `repo-checker/main.py` schedules checks with configurable cadence (`REPO_CHECKER_INTERVAL_SECONDS`, default `30`, min `5`) and optional spacing between repo runs (`REPO_CHECKER_INTER_REPO_DELAY_SECONDS`, default `1.0`) to reduce bursty process creation.
+- `repo-checker/main.py` now returns a boolean from `pull_jobs()` and breaks the main loop immediately when a repo signals resource-pressure reboot, instead of sleeping for another interval before exiting with status `1`.
 
 ## Agent Note
 
