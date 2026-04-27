@@ -1,5 +1,3 @@
-export const WEBHOOK_STORAGE_KEY = "freshbatch-user-webhook-endpoint";
-
 export type WebhookSettingsPayload = {
   hookUrl: string;
   isFte: boolean;
@@ -7,14 +5,6 @@ export type WebhookSettingsPayload = {
   isActive: boolean;
   isMarkdown: boolean;
 };
-
-export function getStoredWebhookEndpoint() {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return window.localStorage.getItem(WEBHOOK_STORAGE_KEY) ?? "";
-}
 
 export function isValidWebhookEndpoint(value: string) {
   try {
