@@ -34,6 +34,7 @@ This project is a web hook job tracker designed to monitor and manage web hook e
 - `testing/`: Test helpers and utilities such as `mock_webhook.py` and scripts to run integration or local tests.
 
 - Top-level scripts and config: files like `dev.dep.docker-compose.yml` (shared dev stack for app containers + Redis + Postgres), `install.sh`, `package.json`, `pyproject.toml`, and `README.md` provide development setup, dependency management, and documentation.
+- `scripts/move-db/main.py`: one-to-one Postgres migration utility that copies full schema+data from a source DB to a target DB via `pg_dump` + `pg_restore`, with optional table row-count parity validation after restore.
 
 - Compose networking convention: start dependency services with root `dev.dep.docker-compose.yml` (creates shared network `web-hook-job-tracker-dev-shared` with `redis` and `db`), then start either `repo-checker/dev.docker-compose.yml` or `webhook-publisher/dev.docker-compose.yml` to connect app containers onto that same external network for focused development.
 
@@ -145,6 +146,18 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - `repo-checker/src/repo_change_parser.py` uses full `git clone` (no shallow `--depth`) and only allows parsing to start after clone/pull success.
 - `repo-checker/src/repo_change_parser.py` supports one-time startup recovery via `REPO_CHECKER_FORCE_RECLONE_ON_STARTUP` (default `true`): existing local repo dirs are force-deleted and cloned fresh before parsing.
 - `repo-checker/main.py` schedules checks with configurable cadence (`REPO_CHECKER_INTERVAL_SECONDS`, default `30`, min `5`) and optional spacing between repo runs (`REPO_CHECKER_INTER_REPO_DELAY_SECONDS`, default `1.0`) to reduce bursty process creation.
+
+## Move-DB Script Notes
+
+- Script path: `scripts/move-db/main.py`
+- Purpose: one-to-one copy from old Postgres DB to new Postgres DB (schema + data) using `pg_dump --format=custom` and `pg_restore --clean --if-exists --single-transaction`.
+- Preferred env vars:
+  - `SOURCE_DATABASE_URL` (aliases: `OLD_PROD_DATABASE_URL`, `PROD_DATABASE_URL`)
+  - `TARGET_DATABASE_URL` (alias: `NEW_PROD_DATABASE_URL`)
+- Safety/verification:
+  - validates source and target table sets match
+  - validates per-table row counts after restore (unless `--skip-validation`)
+  - warns to pause writes to source DB during migration for strict parity
 
 ## Agent Note
 
