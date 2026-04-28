@@ -38,21 +38,24 @@ REPOS = [
 
 _job_lock = threading.Lock()
 
-def job():
+def pull_jobs() -> bool:
     if not _job_lock.acquire(blocking=False):
         logging.warning("Skipping repo-checker tick because previous run is still in progress")
-        return
+        return False
 
     logging.info("Running repo-checker")
     try:
         for index, repo in enumerate(REPOS):
             repo.check()
+            if repo.need_to_reboot_due_to_resource_pressure():
+                return True
+            # Add delay between repos to reduce chance of resource contention if multiple repos are being processed
             if index < len(REPOS) - 1 and INTER_REPO_DELAY_SECONDS > 0:
                 time.sleep(INTER_REPO_DELAY_SECONDS)
     finally:
         _job_lock.release()
 
-schedule.every(CHECK_INTERVAL_SECONDS).seconds.do(job)
+    return False
 
 if __name__ == "__main__":
     logging.info(
@@ -60,6 +63,14 @@ if __name__ == "__main__":
         CHECK_INTERVAL_SECONDS,
         INTER_REPO_DELAY_SECONDS,
     )
+
+
     while True:
-        schedule.run_pending()
-        time.sleep(1)
+        force_reboot_system = pull_jobs()
+        # If any repo signals that the system is under resource pressure and should be rebooted, break the loop immediately to allow for a quick restart, rather than waiting for the next scheduled tick.
+        if force_reboot_system:
+            break
+        time.sleep(CHECK_INTERVAL_SECONDS)
+
+    # git crash or smt
+    sys.exit(1)

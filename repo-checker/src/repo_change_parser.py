@@ -24,52 +24,21 @@ class RepoChangesParser:
         self.__redis_pool = redis_pool
         force_reclone_env = str(os.getenv("REPO_CHECKER_FORCE_RECLONE_ON_STARTUP") or "true").strip().lower()
         self._force_reclone_on_startup = force_reclone_env in {"1", "true", "yes", "on"}
-        resource_backoff_seconds_env = str(os.getenv("REPO_CHECKER_RESOURCE_BACKOFF_SECONDS") or "90").strip()
-        self._resource_backoff_seconds = max(15, int(resource_backoff_seconds_env))
         self._startup_sync_complete = False
-        self._resource_backoff_until: datetime | None = None
+        self._need_reboot_due_to_resource_pressure = False
 
-    def _is_process_pressure_error(self, error_text: str) -> bool:
+    def _is_process_pressure_error(self, error: Exception) -> bool:
+        error_text = str(error)
         lowered = error_text.lower()
-        return (
+        error_type =  (
             "resource temporarily unavailable" in lowered
             or "cannot fork" in lowered
             or "can't start new thread" in lowered
             or "errno 11" in lowered
         )
-
-    def _activate_resource_backoff(self, repo_name: str, reason: str) -> None:
-        self._resource_backoff_until = datetime.now() + timedelta(seconds=self._resource_backoff_seconds)
-        logger.warning(
-            "[RepoChangesParser] Entering process-pressure cooldown for repo '%s' for %ss. Reason: %s",
-            repo_name,
-            self._resource_backoff_seconds,
-            reason,
-        )
-
-    def _is_in_resource_backoff(self, repo_name: str) -> bool:
-        if self._resource_backoff_until is None:
+        
+        if not error_type:
             return False
-
-        now = datetime.now()
-        if now >= self._resource_backoff_until:
-            self._resource_backoff_until = None
-            return False
-
-        remaining_seconds = int((self._resource_backoff_until - now).total_seconds())
-        logger.warning(
-            "[RepoChangesParser] Skipping git sync for repo '%s' due to active process-pressure cooldown (%ss remaining)",
-            repo_name,
-            remaining_seconds,
-        )
-        return True
-
-    def _handle_process_pressure_exception(self, repo_name: str, error: Exception) -> bool:
-        error_text = str(error)
-        if not self._is_process_pressure_error(error_text):
-            return False
-
-        self._activate_resource_backoff(repo_name, error_text)
         return True
 
     def __open_connection(self) -> redis.Redis:
@@ -143,8 +112,7 @@ class RepoChangesParser:
                 )
                 return True
             except subprocess.CalledProcessError as e:
-                stderr_text = str(e.stderr or "")
-                is_transient_resource_error = self._is_process_pressure_error(stderr_text)
+                is_transient_resource_error = self._is_process_pressure_error(e)
                 if is_transient_resource_error and attempt < max_attempts:
                     backoff_seconds = attempt
                     logger.warning(
@@ -154,24 +122,23 @@ class RepoChangesParser:
                         attempt,
                         max_attempts,
                         backoff_seconds,
-                        stderr_text.strip(),
+                        str(e.stderr or "").strip(),
                     )
                     time.sleep(backoff_seconds)
                     continue
 
-                if is_transient_resource_error:
-                    self._activate_resource_backoff(repo_name, stderr_text.strip())
+                self._need_reboot_due_to_resource_pressure = is_transient_resource_error
 
                 logger.error(
                     "[RepoChangesParser] Git process failed for repo '%s'. Return code: %s. Stderr: %s",
                     repo_name,
                     e.returncode,
-                    stderr_text,
+                    str(e.stderr or ""),
                 )
                 return False
             except OSError as e:
                 # Errno 11 is commonly raised when the process table is temporarily exhausted.
-                is_process_pressure_error = e.errno == 11 or self._is_process_pressure_error(str(e))
+                is_process_pressure_error = e.errno == 11 or self._is_process_pressure_error(e)
                 if is_process_pressure_error and attempt < max_attempts:
                     backoff_seconds = attempt
                     logger.warning(
@@ -186,8 +153,7 @@ class RepoChangesParser:
                     time.sleep(backoff_seconds)
                     continue
 
-                if is_process_pressure_error:
-                    self._activate_resource_backoff(repo_name, str(e))
+                self._need_reboot_due_to_resource_pressure = is_transient_resource_error
 
                 logger.error(
                     "[RepoChangesParser] Unexpected OS error while running git for repo '%s': %s",
@@ -202,9 +168,6 @@ class RepoChangesParser:
     def pull(self, repo_url: str, repo_name: str) -> bool:
         self.__create_repo_folder()
         repo_path = os.path.join(ALL_REPO_SAVE_PATH, repo_name)
-
-        if self._is_in_resource_backoff(repo_name):
-            return False
 
         try:
             if self._force_reclone_on_startup and not self._startup_sync_complete:
@@ -264,6 +227,15 @@ class RepoChangesParser:
                 exc_info=True,
             )
             return False
+        
+    def need_to_reboot_due_to_resource_pressure(self) -> bool:
+        if self._need_reboot_due_to_resource_pressure:
+            logger.warning(
+                "[RepoChangesParser] System is currently under resource pressure backoff. "
+                "Consider rebooting the system to recover resources if this persists.",
+            )
+            return True
+        return False
 
     def check(self) -> None:
         return None
