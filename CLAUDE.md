@@ -30,6 +30,7 @@ This project is a web hook job tracker designed to monitor and manage web hook e
 - `webhook-publisher/`: Python producer and worker code responsible for publishing webhook events to subscribers; includes Dockerfile/dev compose setup, SQL utilities under `db-queries/`, and worker scripts.
 
 - `shared/`: Python shared package with common constants and interfaces used by multiple backend services and tools.
+  - `src/shared/postgres.py`: shared Postgres DSN parser (`parse_postgres_url`) used by `webhook-publisher` and `scripts/create-db-service`.
 
 - `testing/`: Test helpers and utilities such as `mock_webhook.py` and scripts to run integration or local tests.
 
@@ -49,11 +50,13 @@ This project is a web hook job tracker designed to monitor and manage web hook e
 - Service-level stacks build app images from local Dockerfiles and attach to the shared external network:
   - `repo-checker/dev.docker-compose.yml` builds `repo-checker/Dockerfile`
   - `webhook-publisher/dev.docker-compose.yml` builds `webhook-publisher/Dockerfile`
+  - `create-db.dockerfile` mirrors install-script flow and runs `scripts/create-db-service/prod.install.sh`
 
 - Service connectivity expectations inside Docker network:
   - Redis hostname: `redis`
   - Postgres hostname: `db`
   - `webhook-publisher` DSN: `postgresql://myUser:mySecretPassword@db:5432/myDb`
+  - `create-db-service` DSN: `postgres://myUser:mySecretPassword@db:5432/webhook_db` (consumed as `POSTGRES_DSN_URL`)
 
 - Recommended startup flow:
   1. Start shared deps once from repo root:

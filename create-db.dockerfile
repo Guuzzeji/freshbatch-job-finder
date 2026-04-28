@@ -2,9 +2,9 @@ FROM python:3.14
 
 WORKDIR /app
 
-COPY scripts/create-db-service/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY shared /app/shared
+COPY scripts/create-db-service /app/create-db-service
 
-COPY scripts/create-db-service/ .
+RUN cd /app/create-db-service && chmod +x prod.install.sh && ./prod.install.sh
 
-CMD ["python", "main.py"]
+CMD ["python", "/app/create-db-service/main.py"]

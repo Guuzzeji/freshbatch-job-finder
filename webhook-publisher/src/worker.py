@@ -13,7 +13,9 @@ import logging
 from dotenv import load_dotenv
 
 from shared.interface import JobInformation, HookerInformation
-from .local_shared import PAYLOAD_DIVIDER, parse_postgres_url
+from shared.postgres import parse_postgres_url
+
+from .local_shared import PAYLOAD_DIVIDER
 
 load_dotenv()
 logger = logging.getLogger(__name__)
