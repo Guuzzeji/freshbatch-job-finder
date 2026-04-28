@@ -30,10 +30,12 @@ This project is a web hook job tracker designed to monitor and manage web hook e
 - `webhook-publisher/`: Python producer and worker code responsible for publishing webhook events to subscribers; includes Dockerfile/dev compose setup, SQL utilities under `db-queries/`, and worker scripts.
 
 - `shared/`: Python shared package with common constants and interfaces used by multiple backend services and tools.
+  - `src/shared/postgres.py`: shared Postgres DSN parser (`parse_postgres_url`) used by `webhook-publisher` and `scripts/create-db-service`.
 
 - `testing/`: Test helpers and utilities such as `mock_webhook.py` and scripts to run integration or local tests.
 
 - Top-level scripts and config: files like `dev.dep.docker-compose.yml` (shared dev stack for app containers + Redis + Postgres), `install.sh`, `package.json`, `pyproject.toml`, and `README.md` provide development setup, dependency management, and documentation.
+- `scripts/move-db/main.py`: one-to-one Postgres migration utility that copies full schema+data from a source DB to a target DB via `pg_dump` + `pg_restore`, with optional table row-count parity validation after restore.
 
 - Compose networking convention: start dependency services with root `dev.dep.docker-compose.yml` (creates shared network `web-hook-job-tracker-dev-shared` with `redis` and `db`), then start either `repo-checker/dev.docker-compose.yml` or `webhook-publisher/dev.docker-compose.yml` to connect app containers onto that same external network for focused development.
 
@@ -48,11 +50,13 @@ This project is a web hook job tracker designed to monitor and manage web hook e
 - Service-level stacks build app images from local Dockerfiles and attach to the shared external network:
   - `repo-checker/dev.docker-compose.yml` builds `repo-checker/Dockerfile`
   - `webhook-publisher/dev.docker-compose.yml` builds `webhook-publisher/Dockerfile`
+  - `create-db.dockerfile` mirrors install-script flow and runs `scripts/create-db-service/prod.install.sh`
 
 - Service connectivity expectations inside Docker network:
   - Redis hostname: `redis`
   - Postgres hostname: `db`
   - `webhook-publisher` DSN: `postgresql://myUser:mySecretPassword@db:5432/myDb`
+  - `create-db-service` DSN: `postgres://myUser:mySecretPassword@db:5432/webhook_db` (consumed as `POSTGRES_DSN_URL`)
 
 - Recommended startup flow:
   1. Start shared deps once from repo root:
@@ -73,7 +77,7 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - **Env vars:**
   - `DATABASE_AUTH_URL=postgresql://myUser:mySecretPassword@localhost:5432/auth_db`
   - `DATABASE_WEBHOOK_URL=postgresql://myUser:mySecretPassword@localhost:5432/webhook_db`
-  - `REDIS_URL=redis://localhost:6379` — used by the Next.js app (`app/lib/redis.ts`) to connect to Redis for test webhook enqueueing via `webhook:fanout:pending`. Must point to the same Redis instance used by the Python services.
+  - `REDIS_URL=redis://localhost:6379` — shared by the Next.js app, `repo-checker`, and `webhook-publisher` for Redis connectivity (including username/password URLs such as `redis://default:password@localhost:6379`). Used by the app (`app/lib/redis.ts`) for test webhook enqueueing via `webhook:fanout:pending` and must point to the same Redis instance as the Python services.
 - **Kysely client:** `app/lib/db/webhook-db.ts` — singleton `Kysely<WebhookDatabase>` using `DATABASE_WEBHOOK_URL`. Import as `import { webhookDb } from "@/lib/db/webhook-db"`. Marked `server-only` — never import in client components.
 - **Types:** `app/lib/db/webhook-types.ts` — `WebhookRow`, `NewWebhookRow`, `WebhookRowUpdate`, `WebhookDatabase`.
 - **Server Actions** (`app/app/dashboard/actions.ts`):
@@ -146,6 +150,18 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - `repo-checker/src/repo_change_parser.py` supports one-time startup recovery via `REPO_CHECKER_FORCE_RECLONE_ON_STARTUP` (default `true`): existing local repo dirs are force-deleted and cloned fresh before parsing.
 - `repo-checker/main.py` schedules checks with configurable cadence (`REPO_CHECKER_INTERVAL_SECONDS`, default `30`, min `5`) and optional spacing between repo runs (`REPO_CHECKER_INTER_REPO_DELAY_SECONDS`, default `1.0`) to reduce bursty process creation.
 - `repo-checker/main.py` now returns a boolean from `pull_jobs()` and breaks the main loop immediately when a repo signals resource-pressure reboot, instead of sleeping for another interval before exiting with status `1`.
+
+## Move-DB Script Notes
+
+- Script path: `scripts/move-db/main.py`
+- Purpose: one-to-one copy from old Postgres DB to new Postgres DB (schema + data) using `pg_dump --format=custom` and `pg_restore --clean --if-exists --single-transaction`.
+- Preferred env vars:
+  - `SOURCE_DATABASE_URL` (aliases: `OLD_PROD_DATABASE_URL`, `PROD_DATABASE_URL`)
+  - `TARGET_DATABASE_URL` (alias: `NEW_PROD_DATABASE_URL`)
+- Safety/verification:
+  - validates source and target table sets match
+  - validates per-table row counts after restore (unless `--skip-validation`)
+  - warns to pause writes to source DB during migration for strict parity
 
 ## Agent Note
 

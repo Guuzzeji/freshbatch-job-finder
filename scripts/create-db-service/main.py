@@ -3,6 +3,7 @@ import time
 import logging
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from shared.postgres import parse_postgres_url
 
 # Configure logging
 logging.basicConfig(
@@ -11,11 +12,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Environment variables
-DB_HOST = os.environ.get("DB_HOST", "db")
-DB_PORT = os.environ.get("DB_PORT", "5432")
-POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
-POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
+_postgres_dsn = os.getenv("POSTGRES_DSN_URL")
+if not _postgres_dsn:
+    raise RuntimeError("POSTGRES_DSN_URL environment variable is not set")
+POSTGRES_DSN_URL: str = _postgres_dsn
+
+
+def connect_to_db(dbname: str):
+    parsed_url = parse_postgres_url(POSTGRES_DSN_URL)
+    return psycopg2.connect(
+        dbname=dbname,
+        user=parsed_url["username"],
+        password=parsed_url["password"],
+        host=parsed_url["host"],
+        port=parsed_url["port"],
+    )
 
 def execute_sql_file(cursor, file_path):
     with open(file_path, 'r') as f:
@@ -24,16 +35,11 @@ def execute_sql_file(cursor, file_path):
             cursor.execute(sql)
 
 def create_databases():
-    logger.info(f"Connecting to default database (postgres) at {DB_HOST}:{DB_PORT}...")
+    parsed_url = parse_postgres_url(POSTGRES_DSN_URL)
+    logger.info(f"Connecting to default database (postgres) at {parsed_url['host']}:{parsed_url['port']}...")
     try:
         # Connect to the default postgres database
-        conn = psycopg2.connect(
-            dbname="postgres",
-            user=POSTGRES_USER,
-            password=POSTGRES_PASSWORD,
-            host=DB_HOST,
-            port=DB_PORT
-        )
+        conn = connect_to_db("postgres")
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
 
@@ -58,15 +64,10 @@ def create_databases():
         raise
 
 def create_tables():
-    logger.info(f"Connecting to webhook_db at {DB_HOST}:{DB_PORT}...")
+    parsed_url = parse_postgres_url(POSTGRES_DSN_URL)
+    logger.info(f"Connecting to webhook_db at {parsed_url['host']}:{parsed_url['port']}...")
     try:
-        conn = psycopg2.connect(
-            dbname="webhook_db",
-            user=POSTGRES_USER,
-            password=POSTGRES_PASSWORD,
-            host=DB_HOST,
-            port=DB_PORT
-        )
+        conn = connect_to_db("webhook_db")
         cur = conn.cursor()
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
