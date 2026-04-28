@@ -96,6 +96,9 @@ class SimplifySummer2026(RepoChangesParser):
         logger.info(f"[SimplifySummer2026] Found {len(commits)} new commit(s) since last check (last check was at {last_date.isoformat()})")
 
         if len(commits) == 0:
+            # Edge case: we want to have some date saved in Redis for future checks, so if there are no commits and no date, we save the current date as the last commit date
+            if last_date is None:
+                super().save_commit_date(datetime.now(), self.__repo_name)
             return None
         
         super().save_commit_date(commits[0].author_date + timedelta(seconds=5), self.__repo_name)

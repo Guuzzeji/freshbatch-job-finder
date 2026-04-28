@@ -44,7 +44,7 @@ class RepoChangesParser:
     def __open_connection(self) -> redis.Redis:
         return redis.Redis(connection_pool=self.__redis_pool)
 
-    def get_last_commit_date(self, repo_name: str) -> datetime:
+    def get_last_commit_date(self, repo_name: str) -> datetime | None:
         logger.info(f"[RepoChangesParser] Retrieving last commit date for repo '{repo_name}' from Redis")
         redis_conn = self.__open_connection()
         redis_date = redis_conn.get(f"{repo_name}:{REPO_DATE_KEY}")
@@ -54,7 +54,7 @@ class RepoChangesParser:
         if redis_date is not None:
             return datetime.fromisoformat(str(redis_date))
         
-        return datetime.now()
+        return None
 
     def save_commit_date(self, date: datetime, repo_name: str) -> None:
         logger.info(f"[RepoChangesParser] Saving last commit date for repo '{repo_name}' to Redis: {date.isoformat()}")

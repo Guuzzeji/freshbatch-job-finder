@@ -96,6 +96,9 @@ class SimplifyJobs(RepoChangesParser):
         commits = self.get_latest_commits(last_date)
 
         if len(commits) == 0:
+            # Edge case: we want to have some date saved in Redis for future checks, so if there are no commits and no date, we save the current date as the last commit date
+            if last_date is None:
+                super().save_commit_date(datetime.now(), self.__repo_name)
             return None
         
         super().save_commit_date(commits[0].author_date + timedelta(seconds=5), self.__repo_name)
