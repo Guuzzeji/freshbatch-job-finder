@@ -89,6 +89,7 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - **SSR pattern:** `app/app/dashboard/page.tsx` is an `async` server component that calls `getWebhookSettingsForCurrentUser()` and passes `initialWebhook` to `<HookCard>`.
 - **Client pattern:** `HookCard.tsx` accepts `initialWebhook: WebhookRow | null`, initializes state from it, calls `saveWebhookSettingsAction` inside `startTransition`, then `router.refresh()` to re-sync server state. No `localStorage` anywhere.
 - **Dashboard settings MVP scope:** `HookCard.tsx` exposes only MVP-enabled toggles (`deliveries active`, `internships`, `new grad roles`), removes unsupported `remote only`, keeps a single explicit `save settings` persistence action, keeps `test fire webhook` as separate navigation, and links to `/docs` for setup guidance.
+- **Delivery log item behavior:** `app/components/LogItem.tsx` titles each row with the log date and total payload job count, previews the first job (`company_name` + `title`), keeps status-code chips unchanged, and renders the full `jobs_payload` in a collapsed "view payload" disclosure.
 - **Schema file:** `db-queries/create_all.sql` — edit table definitions directly (no ALTER TABLE). Reboot Docker with `docker compose -f dev.dep.docker-compose.yml down -v && up -d` to apply schema changes.
 - **Validator:** `app/lib/webhook.ts` exports `isValidWebhookSettingsPayload` (used server-side) and `isValidWebhookEndpoint` (used client-side).
 
