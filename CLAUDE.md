@@ -74,7 +74,7 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 - **Env vars:**
   - `DATABASE_AUTH_URL=postgresql://myUser:mySecretPassword@localhost:5432/auth_db`
   - `DATABASE_WEBHOOK_URL=postgresql://myUser:mySecretPassword@localhost:5432/webhook_db`
-  - `REDIS_URL=redis://localhost:6379` — used by the Next.js app (`app/lib/redis.ts`) to connect to Redis for test webhook enqueueing via `webhook:fanout:pending`. Must point to the same Redis instance used by the Python services.
+  - `REDIS_URL=redis://localhost:6379` — shared by the Next.js app, `repo-checker`, and `webhook-publisher` for Redis connectivity (including username/password URLs such as `redis://default:password@localhost:6379`). Used by the app (`app/lib/redis.ts`) for test webhook enqueueing via `webhook:fanout:pending` and must point to the same Redis instance as the Python services.
 - **Kysely client:** `app/lib/db/webhook-db.ts` — singleton `Kysely<WebhookDatabase>` using `DATABASE_WEBHOOK_URL`. Import as `import { webhookDb } from "@/lib/db/webhook-db"`. Marked `server-only` — never import in client components.
 - **Types:** `app/lib/db/webhook-types.ts` — `WebhookRow`, `NewWebhookRow`, `WebhookRowUpdate`, `WebhookDatabase`.
 - **Server Actions** (`app/app/dashboard/actions.ts`):
