@@ -13,8 +13,7 @@ from repos.SimplifySummer2026 import SimplifySummer2026
 
 load_dotenv()
 
-REDIS_HOST = str(os.getenv('REDIS_HOST') or 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT') or 6379)
+REDIS_URL = str(os.getenv('REDIS_URL') or 'redis://localhost:6379')
 CHECK_INTERVAL_SECONDS = max(5, int(os.getenv('REPO_CHECKER_INTERVAL_SECONDS') or 30))
 INTER_REPO_DELAY_SECONDS = max(0.0, float(os.getenv('REPO_CHECKER_INTER_REPO_DELAY_SECONDS') or 1.0))
 
@@ -26,8 +25,8 @@ logging.basicConfig(
     ]
 )
 
-redis_pool = redis.ConnectionPool(
-    host=REDIS_HOST, port=REDIS_PORT,
+redis_pool = redis.ConnectionPool.from_url(
+    url=REDIS_URL,
     max_connections=2,  # one per worker + headroom
     decode_responses=True
 )

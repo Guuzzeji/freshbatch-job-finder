@@ -24,16 +24,15 @@ logging.basicConfig(
 
 
 THREAD_COUNT = int(os.getenv('THREAD_COUNT') or 5)
-REDIS_HOST = str(os.getenv('REDIS_HOST') or 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT') or 6379)
+REDIS_URL = str(os.getenv('REDIS_URL') or 'redis://localhost:6379')
 
 
 if __name__ == "__main__":
     logging.info("Starting webhook-publisher")
     managed_threads = []
 
-    redis_pool = redis.ConnectionPool(
-        host=REDIS_HOST, port=REDIS_PORT,
+    redis_pool = redis.ConnectionPool.from_url(
+        url=REDIS_URL,
         max_connections=THREAD_COUNT + 3,  # one per worker + headroom
         decode_responses=True
     )

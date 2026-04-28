@@ -87,10 +87,7 @@ services:
     container_name: create-db-service
     restart: "no"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_HOST: db
-      DB_PORT: 5432
+      POSTGRES_DSN_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/webhook_db
     depends_on:
       db:
         condition: service_healthy

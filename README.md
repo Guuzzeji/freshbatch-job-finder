@@ -34,16 +34,14 @@ REDIS_URL=redis://localhost:6379
 
 ```env
 THREAD_COUNT=5
-REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_URL=redis://localhost:6379
 POSTGRES_DSN_URL=postgresql://myUser:mySecretPassword@localhost:5432/webhook_db
 ```
 
 **repo-checker/.env**
 
 ```env
-REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_URL=redis://localhost:6379
 ```
 
 ### 3. Run Services
