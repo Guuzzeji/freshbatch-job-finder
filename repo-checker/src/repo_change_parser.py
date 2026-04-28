@@ -45,9 +45,11 @@ class RepoChangesParser:
         return redis.Redis(connection_pool=self.__redis_pool)
 
     def get_last_commit_date(self, repo_name: str) -> datetime:
+        logger.info(f"[RepoChangesParser] Retrieving last commit date for repo '{repo_name}' from Redis")
         redis_conn = self.__open_connection()
         redis_date = redis_conn.get(f"{repo_name}:{REPO_DATE_KEY}")
         redis_conn.close()
+        logger.info(f"[RepoChangesParser] Retrieved last commit date for repo '{repo_name}': {redis_date}")
 
         if redis_date is not None:
             return datetime.fromisoformat(str(redis_date))
@@ -55,15 +57,19 @@ class RepoChangesParser:
         return datetime.now()
 
     def save_commit_date(self, date: datetime, repo_name: str) -> None:
+        logger.info(f"[RepoChangesParser] Saving last commit date for repo '{repo_name}' to Redis: {date.isoformat()}")
         redis_conn = self.__open_connection()
         redis_conn.set(f"{repo_name}:{REPO_DATE_KEY}", date.isoformat())
         redis_conn.close()
+        logger.info(f"[RepoChangesParser] Successfully saved last commit date for repo '{repo_name}' to Redis")
 
     async def add_jobs_batch(self, jobs: list[JobInformation]) -> None:
+        logger.info(f"[RepoChangesParser] Adding batch of {len(jobs)} job(s) to Redis fanout queue")
         redis_conn = self.__open_connection()
         jobs_batch = [job.dump() for job in jobs]
         redis_conn.lpush(QUEUE_NAME_PAYLOADS_FANOUT, json.dumps(jobs_batch))
         redis_conn.close()
+        logger.info(f"[RepoChangesParser] Successfully added batch of {len(jobs)} job(s) to Redis fanout queue")
 
     def __create_repo_folder(self) -> None:
         if not os.path.exists(ALL_REPO_SAVE_PATH):

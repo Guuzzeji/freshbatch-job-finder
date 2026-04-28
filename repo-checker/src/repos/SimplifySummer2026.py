@@ -90,9 +90,10 @@ class SimplifySummer2026(RepoChangesParser):
         if not pull_ok:
             logger.error("[SimplifySummer2026] Skipping parse because repository sync did not complete")
             return None
-
+        
         last_date = super().get_last_commit_date(self.__repo_name)
         commits = self.get_latest_commits(last_date)
+        logger.info(f"[SimplifySummer2026] Found {len(commits)} new commit(s) since last check (last check was at {last_date.isoformat()})")
 
         if len(commits) == 0:
             return None
