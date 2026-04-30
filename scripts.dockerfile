@@ -6,3 +6,5 @@ COPY shared /app/shared
 COPY scripts/ /app/scripts/
 
 RUN cd /app/scripts/ && chmod +x prod.install.sh && ./prod.install.sh
+
+CMD ["python", "/app/scripts/uptime.py"]
