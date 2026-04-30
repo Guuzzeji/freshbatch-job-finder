@@ -108,10 +108,8 @@ class RepoChangesParser:
     ) -> bool:
         for attempt in range(1, max_attempts + 1):
             try:
-                subprocess.run(
+                subprocess.call(
                     command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
                     text=True,
                     cwd=cwd,
                     check=True,
