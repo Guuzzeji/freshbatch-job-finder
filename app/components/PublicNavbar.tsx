@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-type PublicNavbarVariant = "home" | "docs";
+type PublicNavbarVariant = "home" | "docs" | "legal";
 
 interface PublicNavbarProps {
   variant: PublicNavbarVariant;
@@ -12,10 +13,15 @@ interface PublicNavbarProps {
 
 export default function PublicNavbar({ variant }: PublicNavbarProps) {
   const [navOpen, setNavOpen] = useState(false);
+  const pathname = usePathname();
   const { data: session } = authClient.useSession();
 
   const brandSubline =
-    variant === "docs" ? "docs, warm & ready" : "cs jobs, warm & ready";
+    variant === "docs"
+      ? "docs, warm & ready"
+      : variant === "legal"
+        ? "legal"
+        : "cs jobs, warm & ready";
 
   const navLinkClass =
     "motion-transition-subtle rounded-full border border-[color:var(--border)] bg-transparent px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] hover:bg-[color:var(--cream-dark)]";
@@ -53,9 +59,20 @@ export default function PublicNavbar({ variant }: PublicNavbarProps) {
               </Link>
             </>
           ) : (
-            <Link href="/" className={navLinkClass}>
-              home
-            </Link>
+            <>
+              <Link href="/" className={navLinkClass}>
+                home
+              </Link>
+              {pathname === "/tos" ? (
+                <Link href="/privacy" className={navLinkClass}>
+                  Privacy
+                </Link>
+              ) : pathname === "/privacy" ? (
+                <Link href="/tos" className={navLinkClass}>
+                  Terms of Service
+                </Link>
+              ) : null}
+            </>
           )}
 
           {session ? (
@@ -111,13 +128,32 @@ export default function PublicNavbar({ variant }: PublicNavbarProps) {
               </Link>
             </>
           ) : (
-            <Link
-              href="/"
-              className={mobileNavLinkClass}
-              onClick={() => setNavOpen(false)}
-            >
-              home
-            </Link>
+            <>
+              <Link
+                href="/"
+                className={mobileNavLinkClass}
+                onClick={() => setNavOpen(false)}
+              >
+                home
+              </Link>
+              {pathname === "/tos" ? (
+                <Link
+                  href="/privacy"
+                  className={mobileNavLinkClass}
+                  onClick={() => setNavOpen(false)}
+                >
+                  Privacy
+                </Link>
+              ) : pathname === "/privacy" ? (
+                <Link
+                  href="/tos"
+                  className={mobileNavLinkClass}
+                  onClick={() => setNavOpen(false)}
+                >
+                  TOS
+                </Link>
+              ) : null}
+            </>
           )}
 
           {session ? (
