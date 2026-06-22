@@ -134,9 +134,7 @@ export default function LandingPage() {
     <div className="overflow-x-hidden bg-[color:var(--cream)] text-[color:var(--brown)]">
       <PublicNavbar variant="home" />
 
-      <Ticker />
-
-      <div className="relative min-h-[81vh] overflow-hidden max-sm:min-h-[480px]">
+      <div className="relative min-h-[85vh] overflow-hidden max-sm:min-h-[480px]">
         <CookieBackground />
         <div className="relative z-[2] mx-auto max-w-[820px] px-6 pt-12 pb-10 text-center max-sm:px-5 max-sm:pt-8 max-sm:pb-8">
           <div
