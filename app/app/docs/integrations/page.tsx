@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "freshbatch docs — Integrations",
   description:
-    "Production-ready Freshbatch webhook receiver examples for FastAPI (Python) and Express (TypeScript).",
+    "Production-ready Freshbatch webhook receiver examples for FastAPI, Express, Discord Bot, and n8n.",
 };
 
 const integrations = [
@@ -26,6 +26,12 @@ const integrations = [
     lang: "TypeScript",
     desc: "Full receiver with signature verification, job filtering, and logging. Run with tsx.",
   },
+  {
+    href: "/docs/integrations/n8n",
+    label: "n8n Workflow",
+    lang: "n8n",
+    desc: "No-code automation that receives webhooks and routes jobs to Google Sheets, Slack, and more.",
+  },
 ];
 
 export default function IntegrationsPage() {
@@ -38,9 +44,9 @@ export default function IntegrationsPage() {
         Integrations
       </h1>
       <p className="mt-4 text-[15px] leading-[1.7] text-[color:var(--brown-mid)]">
-        These examples are minimal but production-ready webhook receivers. Each
-        one handles signature verification, parses the job list, and returns a
-        fast 2xx. Pick the one that matches your stack.
+        These examples show how to receive Freshbatch webhooks in your stack.
+        Most include signature verification, parse the job list, and return a
+        fast 2xx. Pick the one that matches your workflow.
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

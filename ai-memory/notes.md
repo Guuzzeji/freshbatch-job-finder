@@ -70,7 +70,7 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
 
 ## Public Docs Architecture
 
-- Public docs are now a 13 page site under `app/app/docs/`, not a single long `/docs` page.
+- Public docs are now a 14 page site under `app/app/docs/`, not a single long `/docs` page.
 - `app/app/docs/page.tsx` redirects `/docs` to `/docs/quickstart`.
 - `app/app/docs/layout.tsx` wraps every docs route with `PublicNavbar` and `DocsLayout`.
 - `app/components/DocsLayout.tsx` provides the shared docs shell, with a desktop sidebar and a mobile drawer menu.
@@ -81,7 +81,7 @@ Each folder is purpose-scoped: frontend UI lives in `app/`, background services 
   - Getting Started pages, `/docs/getting-started/dashboard`, `/docs/getting-started/test-fire`, `/docs/getting-started/delivery-log`
   - Payload Reference, `/docs/payload-reference`
   - Signature Verification pages, `/docs/signature-verification`, `/docs/signature-verification/python`, `/docs/signature-verification/typescript`
-  - Integrations pages, `/docs/integrations`, `/docs/integrations/discord`, `/docs/integrations/fastapi`, `/docs/integrations/express`
+  - Integrations pages, `/docs/integrations`, `/docs/integrations/discord`, `/docs/integrations/fastapi`, `/docs/integrations/express`, `/docs/integrations/n8n`
 - `app/app/docs/integrations/discord/page.tsx` showcases the Freshbatch Discord notification bot example and links to `https://github.com/Guuzzeji/freshbatch-discord-notification-bot`.
 - `app/app/docs/integrations/express/page.tsx` documents explicit `body-parser` installation and `app.use(bodyParser.json())` middleware setup in the TypeScript example.
 - \*\*Signature verification guidance now lives in the dedicated Signature Verification routes and should stay aligned with `webhook-publisher/src/worker.py` and `testing/mock_webhook.py`:
