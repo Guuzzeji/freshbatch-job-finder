@@ -20,7 +20,7 @@ This project is a webhook job tracker that monitors and manages webhook events s
 
 - **AI Agents:** When you make changes to this repository, update `CLAUDE.md` if the change is global and always needs to be read by all models and agents. Otherwise, update `ai-memory/notes.md` for project-level notes and review it as well for additional info.
 - **Git ignore guardrail:** Keep the repo-root ignore rule as `/lib/`, not `lib/`. A bare `lib/` pattern will also ignore `app/lib/`, which contains real frontend source files that must remain committable.
-- **AI Memory:** For any new feature or bug fix, create a README-style summary in `ai-memory/feature/` or `ai-memory/bug-fix/`. Name the file after the feature or bug fix. Include a summary of what was done and which files changed. Other AI agents use these files to stay structured and informed.
+- **AI Memory:** For any new feature or bug fix, create a README-style summary in `ai-memory/feature/` or `ai-memory/bug-fix/`. Name the file after the feature or bug fix. Include a summary of what was done and which files changed. Other AI agents use these files to stay structured and informed. Don't link any docs unless it is important. Follow `tos-page.md` as an example.
 - **AI ChangeLog:** Always update `ai-memory/changelog.md` with a summary of changes, the date they were made, and a link to the related feature or bug-fix markdown file.
 - **Code Writing**: Write the least amount of code possible, as a senior software engineer would. Don't try to reinvent the wheel; use the existing codebase to your advantage.
 

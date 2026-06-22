@@ -6,15 +6,15 @@ Added a Privacy Policy page at `/privacy` to freshbatch, following the same stru
 
 ## Files Changed
 
-| File | Purpose |
-|------|---------|
-| `app/app/privacy/page.tsx` | New Privacy Policy page — Server Component, 12 sections + TL;DR, metadata export |
-| `app/components/Footer.tsx` | Added Privacy Policy link alongside Terms of Service link |
-| `app/app/tos/page.tsx` | Section 6 now links to `/privacy` |
-| `app/components/PublicNavbar.tsx` | `"legal"` variant now shows cross-links between TOS and Privacy pages |
-| `app/app/sitemap.ts` | Added `/tos` and `/privacy` entries |
-| `ai-memory/feature/privacy-policy.md` | This feature summary |
-| `ai-memory/changelog.md` | Updated with changelog entry |
+| File                                  | Purpose                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `app/app/privacy/page.tsx`            | New Privacy Policy page — Server Component, 12 sections + TL;DR, metadata export |
+| `app/components/Footer.tsx`           | Added Privacy Policy link alongside Terms of Service link                        |
+| `app/app/tos/page.tsx`                | Section 6 now links to `/privacy`                                                |
+| `app/components/PublicNavbar.tsx`     | `"legal"` variant now shows cross-links between TOS and Privacy pages            |
+| `app/app/sitemap.ts`                  | Added `/tos` and `/privacy` entries                                              |
+| `ai-memory/feature/privacy-policy.md` | This feature summary                                                             |
+| `ai-memory/changelog.md`              | Updated with changelog entry                                                     |
 
 ## Decisions
 
@@ -31,7 +31,3 @@ Added a Privacy Policy page at `/privacy` to freshbatch, following the same stru
 - **Footer link ordering**: Terms of Service first, Privacy Policy second.
 - **Sitemap**: Both `/tos` and `/privacy` added with `changeFrequency: "monthly"` and `priority: 0.3`.
 - **No automated tests**: QA is user-managed per the execution plan.
-
-## Plan
-
-See `.sisyphus/plans/privacy-policy.md` for the full execution plan.

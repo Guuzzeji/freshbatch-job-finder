@@ -8,12 +8,12 @@ The root layout mounts the Footer as a sibling to `{children}` (not wrapping it)
 
 ## Files Changed
 
-| File | Purpose |
-|------|---------|
-| `app/app/tos/page.tsx` | New TOS page — Server Component, 14 sections + TL;DR, metadata export |
-| `app/components/Footer.tsx` | New footer — Client Component, pathname-based dashboard exclusion, single TOS link |
-| `app/components/PublicNavbar.tsx` | Added `"legal"` variant to the `variant` prop type and conditional rendering |
-| `app/app/layout.tsx` | Imported and mounted Footer as sibling to `{children}` |
+| File                              | Purpose                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------- |
+| `app/app/tos/page.tsx`            | New TOS page — Server Component, 14 sections + TL;DR, metadata export              |
+| `app/components/Footer.tsx`       | New footer — Client Component, pathname-based dashboard exclusion, single TOS link |
+| `app/components/PublicNavbar.tsx` | Added `"legal"` variant to the `variant` prop type and conditional rendering       |
+| `app/app/layout.tsx`              | Imported and mounted Footer as sibling to `{children}`                             |
 
 ## Decisions
 
@@ -26,7 +26,3 @@ The root layout mounts the Footer as a sibling to `{children}` (not wrapping it)
 - **Contact**: Twitter [@guuzzeji](https://twitter.com/guuzzeji).
 - **Design**: Uses existing CSS custom properties (`--cream`, `--brown`, `--caramel`, `--border`, `--muted`, etc.) and Tailwind v4 classes — no new design tokens.
 - **No automated tests**: QA is user-managed per the execution plan.
-
-## Plan
-
-See `.sisyphus/plans/tos-page.md` for the full execution plan.
