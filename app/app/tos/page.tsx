@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PublicNavbar from "@/components/PublicNavbar";
 
 export const metadata: Metadata = {
@@ -111,7 +112,11 @@ export default function TermsOfServicePage() {
             </span>
           </p>
           <p className="mt-3 text-[15px] leading-[1.7] text-[color:var(--brown-mid)]">
-            To provide the service, freshbatch collects and stores your GitHub profile information, email address, registered webhook URL, job-type preferences, and webhook delivery logs. We retain this data only as long as necessary to operate and improve the service. You can request deletion of your account and associated data at any time. A separate privacy policy may provide additional detail.
+            To provide the service, freshbatch collects and stores your GitHub profile information, email address, registered webhook URL, job-type preferences, and webhook delivery logs. We retain this data only as long as necessary to operate and improve the service. You can request deletion of your account and associated data at any time. See our{" "}
+            <Link href="/privacy" className="font-semibold text-[color:var(--brown)] hover:underline">
+              Privacy Policy
+            </Link>{" "}
+            for additional detail.
           </p>
 
           <hr className="border-t border-dashed border-[color:var(--border-light)] my-8" />

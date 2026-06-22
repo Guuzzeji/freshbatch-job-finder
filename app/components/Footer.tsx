@@ -28,6 +28,12 @@ export default function Footer() {
           >
             Terms of Service
           </Link>
+          <Link
+            href="/privacy"
+            className="transition-colors hover:text-[color:var(--brown)]"
+          >
+            Privacy Policy
+          </Link>
         </div>
       </div>
     </footer>
