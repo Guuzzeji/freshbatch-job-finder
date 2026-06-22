@@ -69,7 +69,7 @@ export default function PublicNavbar({ variant }: PublicNavbarProps) {
                 </Link>
               ) : pathname === "/privacy" ? (
                 <Link href="/tos" className={navLinkClass}>
-                  TOS
+                  Terms of Service
                 </Link>
               ) : null}
             </>
