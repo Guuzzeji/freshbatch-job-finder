@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Ticker from "@/components/Ticker";
 import CookieBackground from "@/components/CookieBackground";
 import JobCard from "@/components/JobCard";
 import StepCard from "@/components/StepCard";
