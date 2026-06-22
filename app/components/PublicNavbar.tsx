@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 
-type PublicNavbarVariant = "home" | "docs";
+type PublicNavbarVariant = "home" | "docs" | "legal";
 
 interface PublicNavbarProps {
   variant: PublicNavbarVariant;
@@ -15,7 +15,11 @@ export default function PublicNavbar({ variant }: PublicNavbarProps) {
   const { data: session } = authClient.useSession();
 
   const brandSubline =
-    variant === "docs" ? "docs, warm & ready" : "cs jobs, warm & ready";
+    variant === "docs"
+      ? "docs, warm & ready"
+      : variant === "legal"
+        ? "legal"
+        : "cs jobs, warm & ready";
 
   const navLinkClass =
     "motion-transition-subtle rounded-full border border-[color:var(--border)] bg-transparent px-[14px] py-[5px] font-[var(--font-dm-mono)] text-[11px] text-[color:var(--brown-mid)] hover:bg-[color:var(--cream-dark)]";

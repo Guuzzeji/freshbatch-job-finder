@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, DM_Mono } from "next/font/google";
 import "./globals.css";
+import Footer from "@/components/Footer";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -77,7 +78,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fraunces.variable} ${dmMono.variable}`}>
-      <body className="bg-[#f5edd8] text-[color:var(--brown)]">{children}</body>
+      <body className="bg-[#f5edd8] text-[color:var(--brown)]">
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
