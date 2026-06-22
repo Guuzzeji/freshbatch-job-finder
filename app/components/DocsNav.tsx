@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { kind: "link", label: "Discord Bot", href: "/docs/integrations/discord" },
   { kind: "link", label: "FastAPI", href: "/docs/integrations/fastapi" },
   { kind: "link", label: "Express", href: "/docs/integrations/express" },
+  { kind: "link", label: "n8n Workflow", href: "/docs/integrations/n8n" },
 ];
 
 export default function DocsNav({ onNavigate }: { onNavigate?: () => void }) {
