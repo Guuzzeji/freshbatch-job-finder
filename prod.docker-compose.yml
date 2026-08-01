@@ -28,8 +28,8 @@ services:
 
   app:
     build:
-      context: .
-      dockerfile: frontend.dockerfile
+      context: ./app
+      dockerfile: Dockerfile
     container_name: app
     restart: always
     environment:
