@@ -24,8 +24,8 @@ services:
 
   create-db-service:
     build:
-      context: .
-      dockerfile: create-db.dockerfile
+      context: ./scripts
+      dockerfile: Dockerfile
     container_name: create-db-service
     restart: "no"
     environment:
