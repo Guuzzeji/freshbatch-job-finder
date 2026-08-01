@@ -51,8 +51,8 @@ services:
 
   repo-checker:
     build:
-      context: .
-      dockerfile: repo-checker.dockerfile
+      context: ./repo-checker
+      dockerfile: Dockerfile
     container_name: repo-checker
     restart: always
     environment:
@@ -65,8 +65,8 @@ services:
 
   webhook-publisher:
     build:
-      context: .
-      dockerfile: web-pub.dockerfile
+      context: ./webhook-publisher
+      dockerfile: Dockerfile
     container_name: webhook-publisher
     restart: always
     environment:
@@ -82,8 +82,8 @@ services:
 
   create-db-service:
     build:
-      context: .
-      dockerfile: create-db.dockerfile
+      context: ./scripts
+      dockerfile: Dockerfile
     container_name: create-db-service
     restart: "no"
     environment:
