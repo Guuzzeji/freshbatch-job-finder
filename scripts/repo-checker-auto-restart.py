@@ -12,7 +12,9 @@ COOLIFY_API_KEY=str(os.getenv("COOLIFY_API_KEY"))
 APP_ID=str(os.getenv("APP_ID"))
 
 def restart_repo_checker():
-    url = f"{COOLIFY_BASE_URL}/api/v1/applications/{APP_ID}/restart"
+    # Don't restart as that will not do a full rebuild of the docker image
+    # check this as point of reference: https://github.com/coollabsio/coolify/discussions/2935
+    url = f"{COOLIFY_BASE_URL}/api/v1/applications/deploy?uuid={APP_ID}&force=true"
     headers = {
         "Authorization": f"Bearer {COOLIFY_API_KEY}"
     }
