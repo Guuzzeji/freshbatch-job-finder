@@ -2,3 +2,5 @@ node_modules
 .next
 dist
 CLAUDE.md
+.env.local
+.git

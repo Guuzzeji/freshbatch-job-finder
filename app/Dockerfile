@@ -6,7 +6,7 @@ FROM base AS deps
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY /app/package.json /app/pnpm-lock.yaml*  /app/pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 RUN npm install -g pnpm
 RUN pnpm i --frozen-lockfile;
 
@@ -14,7 +14,7 @@ RUN pnpm i --frozen-lockfile;
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY app/ .
+COPY . .
 ENV CI=true
 
 # Next.js collects completely anonymous telemetry data about general usage.
