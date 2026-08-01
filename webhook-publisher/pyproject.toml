@@ -13,4 +13,4 @@ dynamic = ["dependencies"]
 dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
-local = ["shared @ file://localhost/${PROJECT_ROOT}/../shared"]
+local = ["shared @ file://localhost/${PROJECT_ROOT}/shared"]
