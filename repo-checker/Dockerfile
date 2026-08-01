@@ -9,9 +9,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY shared /app/shared
-COPY repo-checker /app/repo-checker
+COPY . /app
 
-RUN cd /app/repo-checker && chmod +x prod.install.sh && ./prod.install.sh
+RUN chmod +x prod.install.sh && ./prod.install.sh
 
-CMD ["python", "/app/repo-checker/main.py"]
+CMD ["python", "/app/main.py"]
