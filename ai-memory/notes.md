@@ -7,9 +7,9 @@
   - Shared network name: `web-hook-job-tracker-dev-shared`
 
 - Service-level stacks build app images from local Dockerfiles and attach to the shared external network:
-  - `repo-checker/dev.docker-compose.yml` builds `repo-checker/Dockerfile`
-  - `webhook-publisher/dev.docker-compose.yml` builds `webhook-publisher/Dockerfile`
-  - `create-db.dockerfile` mirrors install-script flow and runs `scripts/create-db-service/prod.install.sh`
+  - `repo-checker/Dockerfile` builds the repo-checker image
+  - `webhook-publisher/Dockerfile` builds the webhook-publisher image
+  - `scripts/Dockerfile` mirrors install-script flow and runs `scripts/create-db-service/prod.install.sh`
 
 - Service connectivity expectations inside Docker network:
   - Redis hostname: `redis`
@@ -20,12 +20,12 @@
 - Recommended startup flow:
   1. Start shared deps once from repo root:
      - `docker compose -f dev.dep.docker-compose.yml up -d`
-  2. Start only the app you are actively developing:
-     - `docker compose -f repo-checker/dev.docker-compose.yml up --build`
-     - or `docker compose -f webhook-publisher/dev.docker-compose.yml up --build`
+  2. Build only the app you are actively developing:
+     - `docker build -f repo-checker/Dockerfile repo-checker/`
+     - or `docker build -f webhook-publisher/Dockerfile webhook-publisher/`
   3. Stop app stack when done, keep deps running if still needed.
 
-- Important: do **not** duplicate Redis/Postgres services inside per-service `dev.docker-compose.yml` files; those files should only run app containers and connect to `web-hook-job-tracker-dev-shared`.
+- Important: do **not** duplicate Redis/Postgres services inside per-service Dockerfiles; those images should only run app containers and connect to `web-hook-job-tracker-dev-shared`.
 
 Each folder is purpose-scoped: frontend UI lives in `app/`, background services and tooling live in `repo-checker/` and `webhook-publisher/`, reusable Python code lives in `shared/`, and test fixtures live in `testing/`. This separation keeps UI, workers, and libraries modular and easier to maintain.
 
