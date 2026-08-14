@@ -19,7 +19,7 @@ def restart_repo_checker():
         "Authorization": f"Bearer {COOLIFY_API_KEY}"
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.post(url, headers=headers)
 
     if response.status_code == 200:
         print("Repo checker restarted successfully")
