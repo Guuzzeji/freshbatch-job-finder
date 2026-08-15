@@ -1,3 +1,7 @@
+## 2026-08-15
+
+- Rewrote root README for open-source release and created `docs/` folder (8 pages: architecture, development, per-service docs, Docker Compose deployment guide; Coolify guide written then removed per user request) — [refactor summary](refactor/open-source-docs.md)
+
 ## 2026-08-01
 
 - Moved frontend Dockerfile from `frontend.dockerfile` to `app/Dockerfile`, updated `prod.docker-compose.yml` and `app/.dockerignore`, and corrected stale references in `CLAUDE.md` and `ai-memory/notes.md` — [refactor summary](refactor/move-frontend-dockerfile.md)
