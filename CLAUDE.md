@@ -46,4 +46,4 @@ This project is a webhook job tracker that monitors and manages webhook events s
 
 - Compose networking convention: start dependency services with root `dev.dep.docker-compose.yml` (creates shared network `web-hook-job-tracker-dev-shared` with `redis` and `db`), then build app containers from `repo-checker/Dockerfile` or `webhook-publisher/Dockerfile` to connect onto that same external network for focused development.
 
-- **AI Memory:** `.memory_config.yaml` + `.mnemo/` hold project memory via the Mnemo MCP server (registered in `.mcp.json`). `.mnemo/memory_log.jsonl` is the append-only log, `.mnemo/docs/` the markdown docs; both are committed. `.mnemo/index.db`, `.mnemo/models/`, and the `.mnemo/mnemo` binary are gitignored and rebuilt on demand.
+- **AI Memory:** `.memory_config.yaml` + `.mnemo/` hold project memory via the Mnemo MCP server (registered in `opencode.json`). `.mnemo/memory_log.jsonl` is the append-only log, `.mnemo/docs/` the markdown docs; both are committed. `.mnemo/index.db`, `.mnemo/models/`, and the `.mnemo/mnemo` binary are gitignored and rebuilt on demand.
