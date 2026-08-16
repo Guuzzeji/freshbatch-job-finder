@@ -1,3 +1,12 @@
+---
+id: frontend
+tags: ["frontend"]
+status: active
+---
+## Summary
+Next.js app: stack, routes, env vars, dev/build, Docker port 3131.
+
+## Key Decisions
 # Frontend service
 
 The frontend is a Next.js app where users sign in with GitHub, register webhook endpoints, fire test deliveries, and watch their delivery log. It lives in `app/` and talks to Postgres and Redis directly.

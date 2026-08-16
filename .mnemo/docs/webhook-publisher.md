@@ -1,3 +1,12 @@
+---
+id: webhook-publisher
+tags: ["backend"]
+status: active
+---
+## Summary
+Delivery service: producer/workers, SSRF, signature canonical form, schema.
+
+## Key Decisions
 # webhook-publisher
 
 The webhook-publisher is our delivery service. It consumes job payloads from Redis, fans each batch out to every matching subscriber webhook stored in Postgres, and delivers signed HTTP POST requests to subscriber URLs.

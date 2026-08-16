@@ -1,3 +1,8 @@
+---
+id: open-source-docs
+tags: ["architecture"]
+status: active
+---
 # Open-Source README + Docs Folder
 
 ## Summary
@@ -25,7 +30,7 @@ All docs were written from verified code facts (explore agents read the actual s
 - **`prod.docker-compose.yml` repo-checker Redis bug**: sets `REDIS_HOST`/`REDIS_PORT` but `repo-checker` code reads only `REDIS_URL`; as written repo-checker cannot reach Redis in the compose stack. Fix documented in both deployment docs: add `REDIS_URL: redis://redis:6379`.
 - **`scripts/Dockerfile` CMD runs `uptime.py`** (idle loop), not `create-tables.py`. The compose `create-db-service` builds this image, so table bootstrap is not auto-run on container start. Docs recommend running the bootstrap explicitly.
 
-## Style Decisions
+## Key Decisions
 
 - Warm developer-to-developer tone, first-person "we", no corporate jargon, no em dashes, no emojis.
 - Docs are skimmable: short sections, env var tables, code blocks.

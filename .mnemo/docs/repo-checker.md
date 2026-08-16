@@ -1,3 +1,12 @@
+---
+id: repo-checker
+tags: ["backend"]
+status: active
+---
+## Summary
+Poller service: tracked repos, tick flow, env vars, REDIS_URL gotcha.
+
+## Key Decisions
 # repo-checker
 
 The repo-checker is our polling service. It watches two GitHub repositories for new job listings, pulls the new entries out of commit diffs, and publishes them onto a Redis queue for the webhook-publisher to pick up.

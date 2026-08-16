@@ -1,3 +1,12 @@
+---
+id: architecture
+tags: ["architecture"]
+status: active
+---
+## Summary
+System overview: data flow, payload shape, HMAC-SHA256 signature scheme.
+
+## Key Decisions
 # Architecture
 
 This page walks through the whole system: what each piece does, how data moves between them, and how webhook signatures keep deliveries trustworthy.

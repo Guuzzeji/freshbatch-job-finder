@@ -18,10 +18,9 @@ This project is a webhook job tracker that monitors and manages webhook events s
 
 ## Agent Notes
 
-- **AI Agents:** When you make changes to this repository, update `CLAUDE.md` if the change is global and always needs to be read by all models and agents. Otherwise, update `ai-memory/notes.md` for project-level notes and review it as well for additional info.
+- **AI Memory (Mnemo):** This repo uses **Mnemo**, a Git-native memory server. Before starting any task, call `semantic_search` with relevant terms and act on what you find. After a meaningful outcome (decision, non-obvious fix, changed design, gotcha), record it with `append_memory`. Memory lives inside the repo: `.mnemo/memory_log.jsonl` (source of truth) + `.mnemo/docs/` (markdown projection) — committed and reviewed in PRs like code. Binary artifacts (`index.db`, `index.db-shm`, `index.db-wal`, `models/`, the `mnemo` binary) are gitignored — never commit them. **Mnemo is also the human docs home**: architecture, development, service, and deployment docs live in `.mnemo/docs/` (browseable markdown) — keep them in sync with code changes.
+- **Mnemo rules:** Never hand-edit `.mnemo/memory_log.jsonl` or `.mnemo/docs/*` with file tools — write only through the MCP tools (`semantic_search`, `get_memory`, `list_memories`, `append_memory`, `reindex`). Never invent tags: use only `taxonomy.allowed_categories` from `.memory_config.yaml`. Mark obsolete memory `status: deprecated` via `append_memory` instead of deleting. If memory tools are unavailable, proceed and note it in your report.
 - **Git ignore guardrail:** Keep the repo-root ignore rule as `/lib/`, not `lib/`. A bare `lib/` pattern will also ignore `app/lib/`, which contains real frontend source files that must remain committable.
-- **AI Memory:** For any new feature or bug fix, create a README-style summary in `ai-memory/feature/` or `ai-memory/bug-fix/`. Name the file after the feature or bug fix. Include a summary of what was done and which files changed. Other AI agents use these files to stay structured and informed. Don't link any docs unless it is important. Follow `tos-page.md` as an example.
-- **AI ChangeLog:** Always update `ai-memory/changelog.md` with a summary of changes, the date they were made, and a link to the related feature or bug-fix markdown file.
 - **Code Writing**: Write the least amount of code possible, as a senior software engineer would. Don't try to reinvent the wheel; use the existing codebase to your advantage.
 
 ## Folder Structure
@@ -47,4 +46,4 @@ This project is a webhook job tracker that monitors and manages webhook events s
 
 - Compose networking convention: start dependency services with root `dev.dep.docker-compose.yml` (creates shared network `web-hook-job-tracker-dev-shared` with `redis` and `db`), then build app containers from `repo-checker/Dockerfile` or `webhook-publisher/Dockerfile` to connect onto that same external network for focused development.
 
-- **AI Memory folder:** The `ai-memory/` directory abstracts and tracks changes made by AI. Use `ai-memory/notes.md` for project-level notes, `ai-memory/feature/` and `ai-memory/bug-fix/` for per-change summaries, and `ai-memory/changelog.md` as the dated master log. This keeps context portable across different AI models and systems used by different developers.
+- **AI Memory:** `.memory_config.yaml` + `.mnemo/` hold project memory via the Mnemo MCP server (registered in `opencode.json`). `.mnemo/memory_log.jsonl` is the append-only log, `.mnemo/docs/` the markdown docs; both are committed. `.mnemo/index.db`, `.mnemo/models/`, and the `.mnemo/mnemo` binary are gitignored and rebuilt on demand.

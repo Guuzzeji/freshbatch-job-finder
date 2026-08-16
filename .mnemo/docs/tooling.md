@@ -1,3 +1,12 @@
+---
+id: tooling
+tags: ["devops"]
+status: active
+---
+## Summary
+shared/ package, testing/ mock receiver, scripts/ ops utilities.
+
+## Key Decisions
 # Tooling
 
 A few supporting folders keep the main services small: a shared Python package, a mock receiver for local testing, and a grab bag of ops scripts. None of them are services you'd run in production on their own, but you'll touch all of them while developing.

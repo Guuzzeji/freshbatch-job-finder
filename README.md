@@ -14,7 +14,7 @@ Three moving parts, one pipeline:
 - **webhook-publisher** picks them up, matches subscribers, and delivers signed HTTP POSTs
 - **app** (Next.js) is where users sign in, manage their webhook settings, and watch deliveries land
 
-For the full picture, see [the architecture docs](docs/architecture.md).
+For the full picture, see [the architecture docs](.mnemo/docs/architecture.md).
 
 ## Features
 
@@ -22,9 +22,9 @@ For the full picture, see [the architecture docs](docs/architecture.md).
 - GitHub OAuth sign-in (Better Auth)
 - Dashboard to manage webhook endpoints, job types, and test-fire deliveries
 - Delivery log with full payload inspection
-- HMAC-SHA256 signature verification, with [Python and TypeScript examples](docs/services/frontend.md)
+- HMAC-SHA256 signature verification, with [Python and TypeScript examples](.mnemo/docs/frontend.md)
 - Built-in docs site with integration guides for Discord, FastAPI, Express, and n8n
-- Deployable with [Docker Compose](docs/deployment/docker-compose.md) from a single compose file
+- Deployable with [Docker Compose](.mnemo/docs/docker-compose.md) from a single compose file
 
 ## Tech stack
 
@@ -42,13 +42,13 @@ For the full picture, see [the architecture docs](docs/architecture.md).
 | `shared/` | Dependency-free Python package shared by the workers |
 | `testing/` | Mock webhook receiver for local development |
 | `scripts/` | Ops utilities: database bootstrap, schema |
-| `docs/` | The documentation you're probably looking for right now |
+| `docs/` | Memory + documentation (Mnemo): human-readable docs in `.mnemo/docs/`, audit log in `.mnemo/memory_log.jsonl` |
 
-Each service has its own page under [docs/services/](docs/README.md) if you want details.
+Each service has its own page under [.mnemo/docs/](.mnemo/docs/) if you want details.
 
 ## Quickstart
 
-Full walkthrough in [docs/development.md](docs/development.md). The short version:
+Full walkthrough in [.mnemo/docs/development.md](.mnemo/docs/development.md). The short version:
 
 ```bash
 # 1. Start Postgres + Redis
@@ -59,7 +59,7 @@ docker compose -f dev.dep.docker-compose.yml up -d --build
 docker compose -f dev.dep.docker-compose.yml exec create-db-service python create-tables.py
 
 # 3. Create env files (app/.env.local, webhook-publisher/.env, repo-checker/.env)
-#    see docs/development.md for the exact contents
+#    see .mnemo/docs/development.md for the exact contents
 
 # 4. Run each service in its own terminal
 cd app && npm install && npm run dev
@@ -71,12 +71,12 @@ Head to `http://localhost:3000`, sign in with GitHub, and fire a test webhook.
 
 ## Deploying
 
-The repo ships a production compose file, `prod.docker-compose.yml`, that runs the whole stack on any host with Docker installed. The [Docker Compose guide](docs/deployment/docker-compose.md) covers the services, env vars, and the known gotchas.
+The repo ships a production compose file, `prod.docker-compose.yml`, that runs the whole stack on any host with Docker installed. The [Docker Compose guide](.mnemo/docs/docker-compose.md) covers the services, env vars, and the known gotchas.
 
 ## Documentation
 
-The [docs site](docs/README.md) covers everything: architecture, local development, each service, and both deployment paths.
+The [docs](.mnemo/docs/) cover everything: architecture, local development, each service, and both deployment paths.
 
 ## Contributing
 
-Found a bug, or want to add an integration? Open an issue or a pull request. If you're touching the code, the service docs under `docs/services/` are kept honest on purpose, so keep them in sync with what you change.
+Found a bug, or want to add an integration? Open an issue or a pull request. If you're touching the code, the service docs under `.mnemo/docs/` are kept honest on purpose, so keep them in sync with what you change.

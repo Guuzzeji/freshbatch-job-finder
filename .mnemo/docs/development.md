@@ -1,3 +1,12 @@
+---
+id: development
+tags: ["devops"]
+status: active
+---
+## Summary
+Full local setup: OAuth, env files, dev compose, per-service run, troubleshooting.
+
+## Key Decisions
 # Local Development Setup
 
 This guide walks you through running the whole stack on your machine: the Next.js frontend, the webhook-publisher worker, and the repo-checker worker, backed by Postgres and Redis in Docker. By the end you'll have a working local setup where you can sign in with GitHub and fire test webhooks end to end.

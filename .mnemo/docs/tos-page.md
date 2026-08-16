@@ -1,3 +1,8 @@
+---
+id: tos-page
+tags: ["frontend"]
+status: active
+---
 # Terms of Service Page + Footer
 
 ## Summary
@@ -15,7 +20,7 @@ The root layout mounts the Footer as a sibling to `{children}` (not wrapping it)
 | `app/components/PublicNavbar.tsx` | Added `"legal"` variant to the `variant` prop type and conditional rendering       |
 | `app/app/layout.tsx`              | Imported and mounted Footer as sibling to `{children}`                             |
 
-## Decisions
+## Key Decisions
 
 - **URL path**: `/tos` (standalone route, not under `/docs` — the TOS is not documentation)
 - **Footer visibility**: Hidden on `/dashboard/*` via `pathname?.startsWith('/dashboard')`. Uses mounted-state pattern (`useState` + `useEffect`) to prevent SSR hydration mismatch.

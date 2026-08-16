@@ -1,3 +1,12 @@
+---
+id: docker-compose
+tags: ["devops"]
+status: active
+---
+## Summary
+Production compose walkthrough and known issues.
+
+## Key Decisions
 # Self-Hosting with Docker Compose
 
 The repo ships a production compose file, `prod.docker-compose.yml`, that runs the entire stack on a single host. This guide covers what it starts, what you need to configure, and a couple of known rough edges worth understanding before you deploy.
