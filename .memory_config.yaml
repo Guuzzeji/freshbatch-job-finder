@@ -1,0 +1,31 @@
+system:
+  log_file: ".mnemo/memory_log.jsonl"
+  docs_dir: ".mnemo/docs"
+database:
+  path: ".mnemo/index.db"
+embeddings:
+  model_repo: "onnx-community/embeddinggemma-300m-ONNX"
+  model_path: ".mnemo/models/embeddinggemma-300m.onnx"
+  dimensions: 768
+  search_top_k: 5
+  chunking:
+    split_on: ["## "]
+    max_chunk_tokens: 500
+    overlap_tokens: 50
+taxonomy:
+  allowed_categories:
+    - backend
+    - frontend
+    - devops
+    - architecture
+  key_terms:
+    "webhook": ["webhooks", "webhook_db", "payload", "fanout", "delivery"]
+    "docker": ["dockerfile", "compose", "container", "image"]
+    "redis": ["redis_url", "queue", "pending"]
+    "postgres": ["postgresql", "kysely", "dsn", "auth_db"]
+    "docs": ["documentation", "docs-nav", "sidebar", "integrations"]
+    "dashboard": ["hookcard", "settings", "delivery-log", "test-fire"]
+    "repo-checker": ["pydriller", "repos", "parse", "git-sync"]
+    "signature": ["hmac", "sha256", "verification", "canonical"]
+    "authentication": ["auth", "jwt", "session", "login", "better-auth"]
+    "database": ["db", "sql", "schema", "migration"]

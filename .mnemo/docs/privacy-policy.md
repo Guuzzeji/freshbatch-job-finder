@@ -1,3 +1,8 @@
+---
+id: privacy-policy
+tags: ["frontend"]
+status: active
+---
 # Privacy Policy Page + Integration
 
 ## Summary
@@ -16,7 +21,7 @@ Added a Privacy Policy page at `/privacy` to freshbatch, following the same stru
 | `ai-memory/feature/privacy-policy.md` | This feature summary                                                             |
 | `ai-memory/changelog.md`              | Updated with changelog entry                                                     |
 
-## Decisions
+## Key Decisions
 
 - **URL path**: `/privacy` (standalone route, matching `/tos` pattern)
 - **Page structure**: 12 numbered sections + appendices-style final Contact section. Each section has a bold "TL;DR:" prefix with plain-language summary.

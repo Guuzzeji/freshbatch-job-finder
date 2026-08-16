@@ -1,3 +1,12 @@
+---
+id: project-notes
+tags: ["backend", "frontend", "devops", "architecture"]
+status: active
+---
+## Summary
+Project-wide operational notes migrated from the legacy `ai-memory/notes.md`: dev Docker workflow, webhook persistence, frontend motion guardrails, home page onboarding, public docs architecture, Open Graph metadata, repo-checker runtime guardrails, and the move-db script.
+
+## Key Decisions
 ## Dev Docker Workflow (for AI handoff)
 
 - Root dependency stack (`dev.dep.docker-compose.yml`) is **dependency-only** and runs shared services:

@@ -1,3 +1,8 @@
+---
+id: n8n-integration
+tags: ["frontend"]
+status: active
+---
 # n8n Integration Docs Page
 
 ## Summary
@@ -17,7 +22,7 @@ The new page covers prerequisites, installing n8n, exposing n8n through ngrok, c
 | `ai-memory/feature/n8n-integration.md` | This feature summary |
 | `ai-memory/changelog.md` | Updated with changelog entry |
 
-## Decisions
+## Key Decisions
 
 - **URL path**: `/docs/integrations/n8n`, consistent with other integration examples.
 - **Page structure**: Prerequisites → Install n8n → Expose with ngrok → Create webhook workflow → Connect Freshbatch → Next steps, matching the order in `setupfordummies.md`.
