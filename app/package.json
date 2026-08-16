@@ -10,9 +10,9 @@
     "merge-db": "npx auth@latest migrate"
   },
   "dependencies": {
-    "better-auth": "^1.6.5",
-    "kysely": "^0.28.16",
-    "next": "16.2.4",
+    "better-auth": "^1.6.22",
+    "kysely": "^0.28.17",
+    "next": "16.2.11",
     "pg": "^8.20.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
