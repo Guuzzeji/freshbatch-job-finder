@@ -1,12 +1,12 @@
 bullmq==2.20.3
 certifi==2026.2.25
 charset-normalizer==3.4.7
-idna==3.11
-msgpack==1.1.2
+idna==3.15
+msgpack==1.2.1
 psycopg2==2.9.11
 psycopg2-binary==2.9.11
 python-dotenv==1.2.2
 redis==6.4.0
 requests==2.33.1
 semver==3.0.4
-urllib3==2.6.3
+urllib3==2.7.0
